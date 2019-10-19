@@ -54,7 +54,33 @@ def supportVectorMachineResult(Xs,Ys,Xvalidation,Yvalidation):
     clf.fit(Xs, Ys.ravel())
     return clf.score(Xvalidation,Yvalidation)
     
+################################################################
 
+#prova diverse bandwith e ritorna il migliore estimatore
+def chooseBestEstimator(data):
+    # use grid search cross-validation to optimize the bandwidth
+    params = {'bandwidth': np.arange(0.02, 0.6, 0.02)}
+    grid = GridSearchCV(KernelDensity(), params, cv=5, iid=False)
+    grid.fit(data)
+    print("best bandwidth: {0}".format(grid.best_estimator_.bandwidth))
+    kde = grid.best_estimator_
+    return kde
 
+def kernelDensityResults(Xs):
+    kde = chooseBestEstimator(Xs).fit(Xs)
+    return kde.score_samples(Xs)
 
-
+'''
+def myNbResults(Xs,Ys,Xvalidation,Yvalidation):
+    # trainiamo il nostro classificatore con Xs e Ys
+    # classificatore.create(xs,ys)
+    # prediciamo le classi per Xvalidation
+    # predictions = classificatore.classify(Xvalidation)
+    return classifierScore(predictions, Yvalidation)
+'''    
+    
+# x l'array con le classi predette dal nostro classificatore
+# y l'array con le classi effettive   
+def classifierScore(x,y):    
+    return accuracy_score(y, x)
+    
