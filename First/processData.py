@@ -6,14 +6,10 @@ Created on Tue Oct  8 01:29:34 2019
 """
 
 import numpy as np
-import sklearn as sk
+from sklearn.naive_bayes import GaussianNB
+from sklearn.model_selection import train_test_split
 from sklearn import svm
-
-# main example
-# data = load_data('TP1_train.tsv)
-# x = divideTrainingAndValidation(data[0],data[1],0.7)
-# y = gaussianNbResult(x[0],x[1],x[2],x[3])
-# z = supportVectorMachineResult(x[0],x[1],x[2],x[3])
+from sklearn.metrics import accuracy_score as score
 
 def load_data(file_name):
      #prende i dati da file, li mette in un ndArray
@@ -47,7 +43,7 @@ def divideTrainingAndValidation(Xs,Ys,percentage):
     return(trainingXs, trainingYs, validationXs, validationYs)
     
 def gaussianNbResult(Xs,Ys,Xvalidation,Yvalidation):
-    clf = sk.naive_bayes.GaussianNB()
+    clf = GaussianNB()
     clf.fit(Xs, Ys.ravel())
     return clf.score(Xvalidation,Yvalidation)
 
@@ -58,7 +54,7 @@ def supportVectorMachineResult(Xs,Ys,Xvalidation,Yvalidation):
     clf.fit(Xs, Ys.ravel())
     return clf.score(Xvalidation,Yvalidation)
     
-    
-    
- 
-    
+
+
+
+
