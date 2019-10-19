@@ -7,9 +7,23 @@ Created on Tue Oct  8 01:29:34 2019
 
 import numpy as np
 from sklearn.naive_bayes import GaussianNB
-from sklearn.model_selection import train_test_split
 from sklearn import svm
-from sklearn.metrics import accuracy_score as score
+from sklearn.metrics import accuracy_score
+import NaiveBayes as nb
+
+from sklearn.neighbors.kde import KernelDensity
+from sklearn.model_selection import GridSearchCV
+
+def main():
+    data = load_data('TP1_train.tsv')
+    x = divideTrainingAndValidation(data[0],data[1],0.7)
+    y = gaussianNbResult(x[0],x[1],x[2],x[3])
+    z = supportVectorMachineResult(x[0],x[1],x[2],x[3])
+    
+    my = myNbResults(x[0],x[1],x[2],x[3],chooseBestBandWidth(x[0],x[1]))
+    #my=kernelDensityResults(x[0],x[1])
+    
+    return (y,z,my)
 
 def load_data(file_name):
      #prende i dati da file, li mette in un ndArray
@@ -56,31 +70,32 @@ def supportVectorMachineResult(Xs,Ys,Xvalidation,Yvalidation):
     
 ################################################################
 
+
+def chooseBestBandWidth(data,y):
+    params = {'bandwidth': np.arange(0.02, 0.6, 0.02)}
+    grid = GridSearchCV(KernelDensity(), params, cv=5, iid=False)
+    grid.fit(data,y)
+    print("best bandwidth: {0}".format(grid.best_estimator_.bandwidth))
+    return grid.best_estimator_.bandwidth
+
 #prova diverse bandwith e ritorna il migliore estimatore
-def chooseBestEstimator(data):
+def chooseBestEstimator(data,y):
     # use grid search cross-validation to optimize the bandwidth
     params = {'bandwidth': np.arange(0.02, 0.6, 0.02)}
     grid = GridSearchCV(KernelDensity(), params, cv=5, iid=False)
-    grid.fit(data)
+    grid.fit(data,y)
     print("best bandwidth: {0}".format(grid.best_estimator_.bandwidth))
     kde = grid.best_estimator_
     return kde
 
-def kernelDensityResults(Xs):
-    kde = chooseBestEstimator(Xs).fit(Xs)
-    return kde.score_samples(Xs)
+def kernelDensityResults(Xs,Ys):
+    kde = chooseBestEstimator(Xs,Ys).fit(Xs,Ys)
+    return np.exp(kde.score_samples(Xs))
 
-'''
-def myNbResults(Xs,Ys,Xvalidation,Yvalidation):
-    # trainiamo il nostro classificatore con Xs e Ys
-    # classificatore.create(xs,ys)
-    # prediciamo le classi per Xvalidation
-    # predictions = classificatore.classify(Xvalidation)
-    return classifierScore(predictions, Yvalidation)
-'''    
+
+def myNbResults(Xs,Ys,Xvalidation,Yvalidation,es):
+    ourNB = nb.NaiveBayes(es)
+    ourNB.fit(Xs, Ys.ravel())
+    return ourNB.score(Xvalidation,Yvalidation.ravel())
     
-# x l'array con le classi predette dal nostro classificatore
-# y l'array con le classi effettive   
-def classifierScore(x,y):    
-    return accuracy_score(y, x)
     
