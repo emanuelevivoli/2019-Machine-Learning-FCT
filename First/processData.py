@@ -232,18 +232,19 @@ def compare_using_normal_test(dic, a):
     return
 
 
+def first_present_second_not(indexesA, indexesB):
+    result = 0
+    for el in indexesA:
+        if el not in indexesB:
+            result = result + 1
+    return result
+
+
 def compare_using_mcnemar(nameFirst, indexesFirst, nameSecond, indexesSecond):
     print()
-    valueFirst = 0
-    valueSecond = 0
 
-    for el in indexesFirst:
-        if el not in indexesSecond:
-            valueFirst = valueFirst + 1
-
-    for el in indexesSecond:
-        if el not in indexesFirst:
-            valueSecond = valueSecond + 1
+    valueFirst = first_present_second_not(indexesFirst, indexesSecond)
+    valueSecond = first_present_second_not(indexesSecond, indexesFirst)
 
     numerator = (abs(valueFirst - valueSecond) - 1) ** 2
     sub = valueFirst + valueSecond
