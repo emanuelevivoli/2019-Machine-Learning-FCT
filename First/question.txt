@@ -6,11 +6,14 @@ Attention:
 QUESTIONS:
 
 Q1: Considering the data provided, explain the need to standardize the attribute values.
-R1:
+R1: In the training set, the data provided have quite different range of values for each of the 4 attributes: 1st:[-3.873,3.681], 2nd[-53.11,33.831], 3rd[-19.65,30.201], 4th[-3.933,6.034].
+    For this reason, we need to standardize the values to avoid problems with different scales, and so to avoid to deal with these in the next steps.
 
 
 Q2: Explain how you calculated the parameters for standardization and how you used them in the test set.
-R2:
+R2: We calculated the mean and the standard deviation simply applying the concerning numpy function on each columns (features) separately.
+    We saved mean and st.deviation at the moment we standardize the training set, and we applied these two parameters to standardize the test set (without re-calculate it).
+    We did that because a re-calculation can give wrong scale of value (due to the different ranges of values in the sets).
 
 
 Q3: Explain how you calculated the prior probability of an example belonging to a class (the probability before taking into account the attribute values â€‹â€‹of the example) in your NaÃ¯ve Bayes classifier implementation. You may include a relevant piece of your code if this helps you explain.
