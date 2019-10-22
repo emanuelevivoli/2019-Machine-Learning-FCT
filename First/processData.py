@@ -13,43 +13,34 @@ import NaiveBayes as nb
 from sklearn.neighbors.kde import KernelDensity
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.model_selection import StratifiedKFold
+
+import matplotlib.pyplot as plt
 
 
 def main():
-    # prima parte: da completare -----------------------------------
-    print("\n--------------------first part-------------------------\n")
-
     data = load_data('TP1_train.tsv')
-    x = divideTrainingAndValidation(data[0], data[1], 0.7)
-    y, a, b = gaussianNbResult(x[0], x[1], x[2], x[3])
-    z, a, b = supportVectorMachineResult(x[0], x[1], x[2], x[3])
-    my, a, b = myNbResults(x[0], x[1], x[2], x[3], chooseBestBandWidth(x[0], x[1]))
-    # my=kernelDensityResults(x[0],x[1])
-    print([y, z, my])
+    # x = divideTrainingAndValidation(data[0],data[1],0.7)
 
-    # tuning-------------------------------------------------------------
-    print("\n--------------------tuning stuff-------------------------\n")
-    cl_name = "svm"
-    plot_name = "SVM.png"
-    param_option = {
-        "p_name": "gamma",
-        "p_start": 0.2,
-        "p_end": 6,
-        "p_step": 0.2
-    }
-    best_gamma = classifier_parameter_tuning(x[0], x[1], x[2], x[3], cl_name, param_option, plot_name)
+    print("\n--------------------training error-------------------------\n")
 
-    cl_name = "myNB"
-    plot_name = "NB.png"
-    param_option = {
-        "p_name": "bandwidth",
-        "p_start": 0.02,
-        "p_end": 0.6,
-        "p_step": 0.02
-    }
-    best_bw = classifier_parameter_tuning(x[0], x[1], x[2], x[3], cl_name, param_option, plot_name)
+    svm_te = svm_te_gamma(data[0], data[1])
+    mynb_te = mynb_te_bandwidth(data[0], data[1])
 
-    # test finale per comparare i classificatori ------------------
+    # print(svm_te)
+    # print("\n",mynb_te)
+
+    print("\n--------------------cross-validation error-------------------------\n")
+
+    best_gamma, svm_cve = svm_cve_gamma(data[0], data[1])
+    best_bw, mynb_cve = mynb_cve_bandwidth(data[0], data[1])
+
+    # print("\n",best_gamma," - ",svm_cve)
+    # print("\n",best_bw," - ",mynb_cve)
+
+    plot_together_svm(svm_te, svm_cve)
+    plot_together_mynb(mynb_te, mynb_cve)
+
     print("\n--------------------comparing classifier-------------------------\n")
 
     # carico i dati del test set ma normalizzandoli come nel train set
@@ -59,9 +50,9 @@ def main():
     # accuracy, numero errori, indici errati
     gnb_a, gnb_n, gnb_i = gaussianNbResult(data[0], data[1], real_x[0], real_x[1])
     # svm_a, svm_n, svm_i = supportVectorMachineResult(data[0],data[1],real_x[0],real_x[1],best_gamma)
-    svm_a, svm_n, svm_i = supportVectorMachineResult(data[0], data[1], real_x[0], real_x[1])
+    svm_a, svm_n, svm_i = supportVectorMachineResult(data[0], data[1], real_x[0], real_x[1], best_gamma)
     # my_a, my_n, my_i = myNbResults(data[0],data[1],real_x[0],real_x[1],best_bw)
-    my_a, my_n, my_i = myNbResults(data[0], data[1], real_x[0], real_x[1], 0.16)
+    my_a, my_n, my_i = myNbResults(data[0], data[1], real_x[0], real_x[1], best_bw)
 
     results = {
         "gNB": [gnb_a, gnb_n],
@@ -78,6 +69,8 @@ def main():
     print()
     return [gnb_a, svm_a, my_a]
 
+
+# ------functions to load the data from the file------
 
 def load_data(file_name):
     # prende i dati da file, li mette in un ndArray
@@ -121,6 +114,8 @@ def load_data_mean_stdevs(file_name, means, stdevs):
     return (Xs, Ys)
 
 
+# ------function divide a set in training and validation set------
+
 def divideTrainingAndValidation(Xs, Ys, percentage):
     len = Ys.size
     trainingLen = int(len * percentage)
@@ -130,6 +125,8 @@ def divideTrainingAndValidation(Xs, Ys, percentage):
     validationYs = Ys[trainingLen:]
     return (trainingXs, trainingYs, validationXs, validationYs)
 
+
+# ------functions to get the results from classifiers------
 
 def find_error_values(a, b):
     error_n = 0
@@ -153,10 +150,8 @@ def gaussianNbResult(Xs, Ys, Xvalidation, Yvalidation):
     return accuracy, ern, eri
 
 
-# di questo dobbiamo scegliere il valore migliore di gamma
-# con una cross-validation sul training set
-def supportVectorMachineResult(Xs, Ys, Xvalidation, Yvalidation):
-    clf = svm.SVC(C=1, gamma='auto')
+def supportVectorMachineResult(Xs, Ys, Xvalidation, Yvalidation, gamma='auto'):
+    clf = svm.SVC(C=1, gamma=gamma)
     clf.fit(Xs, Ys.ravel())
     # print("printng ",clf.predict(Xvalidation))
     predictions = clf.predict(Xvalidation)
@@ -165,35 +160,6 @@ def supportVectorMachineResult(Xs, Ys, Xvalidation, Yvalidation):
     accuracy = (1 - ern / el_num)
     # print("ern",ern,"eri",eri)
     return accuracy, ern, eri
-
-
-################################################################
-
-
-def chooseBestBandWidth(data, y):
-    params = {'bandwidth': np.arange(0.02, 0.6, 0.02)}
-    cv = StratifiedShuffleSplit(test_size=0.2)
-    grid = GridSearchCV(KernelDensity(), params, cv=cv, iid=False)
-    grid.fit(data, y)
-    print("best bandwidth: {0}".format(grid.best_estimator_.bandwidth))
-    return grid.best_estimator_.bandwidth
-
-
-# prova diverse bandwith e ritorna il migliore estimatore
-def chooseBestEstimator(data, y):
-    # use grid search cross-validation to optimize the bandwidth
-    params = {'bandwidth': np.arange(0.02, 0.6, 0.02)}
-    cv = StratifiedShuffleSplit(test_size=0.2)
-    grid = GridSearchCV(KernelDensity(), params, cv=cv, iid=False)
-    grid.fit(data, y)
-    print("best bandwidth: {0}".format(grid.best_estimator_.bandwidth))
-    kde = grid.best_estimator_
-    return kde
-
-
-def kernelDensityResults(Xs, Ys):
-    kde = chooseBestEstimator(Xs, Ys).fit(Xs, Ys)
-    return np.exp(kde.score_samples(Xs))
 
 
 def myNbResults(Xs, Ys, Xvalidation, Yvalidation, es):
@@ -207,6 +173,85 @@ def myNbResults(Xs, Ys, Xvalidation, Yvalidation, es):
     # print("ern",ern,"eri",eri)
     return accuracy, ern, eri
 
+
+# ------functions to calculate the training error------
+
+def svm_te_gamma(x, y, start=0.2, end=6.2, step=0.2):
+    results = []
+    for g in np.arange(start, end, step):
+        a, en, er = supportVectorMachineResult(x, y, x, y, g)
+        results.append(1 - a)
+    # print("svm_te_gamma",results)
+    return results
+
+
+def mynb_te_bandwidth(x, y, start=0.02, end=0.62, step=0.02):
+    results = []
+    for bw in np.arange(start, end, step):
+        a, en, er = myNbResults(x, y, x, y, bw)
+        results.append(1 - a)
+    return results
+
+
+# ------functions for the cross-validation------
+
+def svm_cve_gamma(x, y, start=0.2, end=6.2, step=0.2):
+    results = []
+    skf = StratifiedKFold(n_splits=5)
+    skf.get_n_splits(x, y)
+    # print(skf)
+    min_error = -1
+    best_gamma = 0
+    for g in np.arange(start, end, step):
+        tempValue = 0
+        cycle = 0
+        for train_index, test_index in skf.split(x, y):
+            # print("TRAIN:", train_index, "TEST:", test_index)
+            X_train, X_test = x[train_index], x[test_index]
+            y_train, y_test = y[train_index], y[test_index]
+            a, en, er, = supportVectorMachineResult(X_train, y_train, X_test, y_test, gamma=g)
+            tempValue += a
+            # print(tempValue)
+            cycle += 1
+        # print()
+        g_mean = (1 - tempValue / cycle)
+        results.append(g_mean)
+        if min_error == -1 or g_mean < min_error:
+            min_error = g_mean
+            best_gamma = g
+
+    return best_gamma, results
+
+
+def mynb_cve_bandwidth(x, y, start=0.02, end=0.62, step=0.02):
+    results = []
+    skf = StratifiedKFold(n_splits=5)
+    skf.get_n_splits(x, y)
+    # print(skf)
+    min_error = -1
+    best_bw = 0
+    for bw in np.arange(start, end, step):
+        tempValue = 0
+        cycle = 0
+        for train_index, test_index in skf.split(x, y):
+            # print("TRAIN:", train_index, "TEST:", test_index)
+            X_train, X_test = x[train_index], x[test_index]
+            y_train, y_test = y[train_index], y[test_index]
+            a, en, er, = myNbResults(X_train, y_train, X_test, y_test, bw)
+            tempValue += a
+            # print(tempValue)
+            cycle += 1
+        # print()
+        bw_mean = (1 - tempValue / cycle)
+        results.append(bw_mean)
+        if min_error == -1 or bw_mean < min_error:
+            min_error = bw_mean
+            best_bw = bw
+
+    return best_bw, results
+
+
+# ------functions to compare classification model------
 
 def compare_using_normal_test(dic, a):
     print()
@@ -260,19 +305,27 @@ def compare_using_mcnemar(nameFirst, indexesFirst, nameSecond, indexesSecond):
             print(" the difference of performance is not significant")
 
 
-def classifier_parameter_tuning(x, y, xTrain, yTrain, cl_name, param_option, plot_name):
-    print()
-    print("cl_name ", cl_name)
-    print("param_option ", param_option["p_name"])
-    print("param_option ", param_option["p_start"])
-    print("param_option ", param_option["p_end"])
-    print("param_option ", param_option["p_step"])
-    print("plot_name ", plot_name)
-    print()
+# ------functions to plot training and validation error------
 
-    # dovrebbe tornare il parametro migliore
-    # e stampare il plot con training e cross validation error
-    return ""
+def plot_together_svm(svm_te, svm_cve):
+    plt.figure()
+    print("\na ", svm_te)
+    print("\nb ", svm_cve)
+    t = np.arange(0.2, 6.2, 0.2)
+    plt.plot(t, svm_te, 'bo')
+    plt.plot(t, svm_cve, 'ro')
+    plt.show()
+    plt.close()
 
+
+def plot_together_mynb(te, cve):
+    plt.figure()
+    print("\na ", te)
+    print("\nb ", cve)
+    t = np.arange(0.02, 0.62, 0.02)
+    plt.plot(t, te, 'bo')
+    plt.plot(t, cve, 'ro')
+    plt.show()
+    plt.close()
 
 
