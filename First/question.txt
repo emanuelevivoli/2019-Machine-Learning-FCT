@@ -6,7 +6,7 @@ Attention:
 QUESTIONS:
 
 Q1: Considering the data provided, explain the need to standardize the attribute values.
-R1: In the training set, the data provided have quite different range of values for each of the 4 attributes: 1st:[-3.873,3.681], 2nd[-53.11,33.831], 3rd[-19.65,30.201], 4th[-3.933,6.034].
+R1: In the training set, the data provided have quite different range of values for each of the 4 features: 1st:[-3.873,3.681], 2nd[-53.11,33.831], 3rd[-19.65,30.201], 4th[-3.933,6.034].
     For this reason, we need to standardize the values to avoid problems with different scales, and so to avoid to deal with these in the next steps.
 
 
