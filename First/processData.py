@@ -312,9 +312,17 @@ def plot_together_svm(svm_te, svm_cve):
     print("\na ", svm_te)
     print("\nb ", svm_cve)
     t = np.arange(0.2, 6.2, 0.2)
-    plt.plot(t, svm_te, 'bo')
-    plt.plot(t, svm_cve, 'ro')
+    plt.plot(t, svm_te, 'bo', label='training error')
+    plt.plot(t, svm_cve, 'ro', label='cross-validation error')
+    plt.xlabel('error')
+    plt.ylabel('gamma')
+    plt.grid(True)
+
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+
+    plt.savefig('SVM.png', bbox_inches='tight')
     plt.show()
+
     plt.close()
 
 
@@ -323,8 +331,15 @@ def plot_together_mynb(te, cve):
     print("\na ", te)
     print("\nb ", cve)
     t = np.arange(0.02, 0.62, 0.02)
-    plt.plot(t, te, 'bo')
-    plt.plot(t, cve, 'ro')
+    plt.plot(t, te, 'bo', label='training error')
+    plt.plot(t, cve, 'ro', label='cross-validation error')
+    plt.xlabel('error')
+    plt.ylabel('bandwidth')
+    plt.grid(True)
+
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+
+    plt.savefig('NB.png', bbox_inches='tight')
     plt.show()
     plt.close()
 
