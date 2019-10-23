@@ -8,41 +8,155 @@ QUESTIONS:
 Q1: Considering the data provided, explain the need to standardize the attribute values.
 R1: In the training set, the data provided have quite different range of values for each of the 4 features: 1st:[-3.873,3.681], 2nd[-53.11,33.831], 3rd[-19.65,30.201], 4th[-3.933,6.034].
     For this reason, we need to standardize the values to avoid problems with different scales, and so to avoid to deal with these in the next steps.
+    More generally, it helps the bad confitioning of a matrix, that is the fraction between the largest (ln) and the smallest (l1) eigen-values. 
+    If the matrix is bad conditioned (fraction ln/l1 >> 1) than the calculus (especially the inversion of a matrix) becames difficult and not very accurate.
+    In fact bad conditioned matrixes have the consequence that little perturbation on the data corresponds to big perturbation on the solution.
 
 
 Q2: Explain how you calculated the parameters for standardization and how you used them in the test set.
 R2: We calculated the mean and the standard deviation simply applying the concerning numpy function on each columns (features) separately.
-    We saved mean and st.deviation at the moment we standardize the training set, and we applied these two parameters to standardize the test set (without re-calculate it).
-    We did that because a re-calculation can give wrong scale of value (due to the different ranges of values in the sets).
+    We saved mean and st.deviation at the moment we standardize the training set (in the object Loader), and we applied these two parameters to standardize the test set (without re-calculate it).
+    We did that because the only thing the model knows is the train test, and for that reason is important to use only the train set information as parameter for preprocessing both the train and test sets.
 
 
-Q3: Explain how you calculated the prior probability of an example belonging to a class (the probability before taking into account the attribute values â€‹â€‹of the example) in your NaÃ¯ve Bayes classifier implementation. You may include a relevant piece of your code if this helps you explain.
-R3:
+Q3: Explain how you calculated the prior probability of an example belonging to a class (the probability before taking into account the attribute values of the example) in your Naive Bayes classifier implementation. You may include a relevant piece of your code if this helps you explain.
+R3: In the class NaiveBayes we have a metod fit that takes the two params X_train and y_train that are respectively the attributes' values and label for each sample in the train set.
+    In this method we build our model calculating first, for each class, the a-priori probability of an example belonging to that class, and then we calculate for each class, and for each attribute, the KDE of the probability of the attribute of that specific classifier.
+    Regarding to the question: we calculate the a-priori probability separating the X_train by classes, and calculating empirically the probability as ration between element of that class and total length of X_train.
+    Then we apply the log to the a-priori probability, as described in the algorithm.
+
+    The code example is:
+    X_train_by_class = [X_train[y_train == yi] for yi in self.all_class]
+    self.logpriors_ = [np.log(Xi.shape[0] / X_train.shape[0]) for Xi in X_train_by_class]
 
 
-Q4: Explain how your NaÃ¯ve Bayes classifier predicts the class to which a test example belongs. You may include a relevant piece of your code if this helps you explain.
-R4:
+Q4: Explain how your Naive Bayes classifier predicts the class to which a test example belongs. You may include a relevant piece of your code if this helps you explain.
+R4: Another thing that we build is a list of models, one for each class, where each model is composed by a set of KDE for each attribute of the train set.
+    This because we didn't use a KDE 1_feature-dimensional, but a n_features-dimensional KDE model from "sklearn.neighbors".
+    Once arrive a X_validation set we first apply every model in the list of models (divided per class) obtaining a 2D matrix with as rows the number of classes, as column the length of X_validation.
+    This data are already the sum of the logarithm of the probability of every features, and it is written in the documentation of "score_samples" in "sklearn.neighbors":
+    < Returns: The array of log(density) evaluations. These are normalized to be probability densities, so values will be low for high-dimensional data. >
+    Now that we have the probability of each element of X_validation belonging to each class, we add the logarithm a-priori probability belonging to each class and we calculate the argmax, finding the class with highest probability.
 
+    The code example is:
+    self.models_ = [KernelDensity(bandwidth=self.bandwidth).fit(Xi) for Xi in X_train_by_class]
+    logprobs = np.array([model.score_samples(X_validation) for model in self.models_]).T
+    result = logprobs + self.logpriors_
+    X_validation_class = self.all_class[np.argmax(result, 1)]
 
 Q5: Explain the effect of the bandwidth parameter on your classifier.
-R5:
+R5: Our classifier has a "Gaussian" kernel (because we don't set it and by default it is gaussian). The kernel shape is fondamental for the algorithm of KDE.
+    What the algorithm do is to center a kernel to each point in the train set and calculate a value for each point as the weighted sum of point that are touched by the kernel and the kernel value in those points.
+    After that we obtain a shape of the distribution that still needs to became probability, and than it is divided by the number of point that we have in order to have uniform integration.
+    A great example is given in this grafical game (https://mathisonian.github.io/kde/) where is possible not only to change the kernel function, but to visualize what does it mean to change the bandwidth and what effect can have in the result estimetion.
 
 
 Q6: Explain what effect the gamma parameter has on the SVM classifier.
-R6:
+R6: A SVM classifier can assume very different forms depending on what kernel we choose and what parameters values.
+    For the simplest example, when the data are linearly separable, none of those parameters make sense because just the maximization of the margin works well.
+    When the dataset became non linearly separable the complexity grows. Here we can introduce a parameter C that allows some of the point (slack variable) to be miss-classified adding to the goal function a relaxion of the SVM contraint.
+    But this can not be enougth, than SVMs can be kernelized using some interesting dual optimization techniques.
+    One interesting kernel function is the Gaussian/rbf kernel that has a parameter gamma that controls the tradeoff between error due to bias and variance in your model. 
+    If you have a very large value of gamma, then even if your input are very similar, the kernel value will be small. That means that the support vector doesn't mean a lot for the classification of your input.
+    And so this allows the SVM to capture more the complexity, but it can became an overfitting of the train set if gamma is too high. Low bias/High variance model.
+    On the other hand if gamma is too small it means that the model has a big influence on determining the class of the new points. Low variance model.
 
 
 Q7: Explain how you determined the best bandwidth and gamma parameters for your classifier and the SVM classifier. You may include a relevant piece of your code if this helps you explain.
-R7:
-
+R7: The function to do so is the same, we just change the model from SVM to NaiveBayes. 
+    What we do is to make a k-fold cross validation (with k=5) on the train set every value of the parameter we chose (gamma or bandwidth) in its range.
+    After this we calculate the train and validation error (mean) for that specific parameter value.
+    We loop over every value in the range and we set as best_parameter the value (of gamma or bandwidth) that allows us to obtain the highest validation accuracy.
+    We do the same for both the model (SVM and NaiveBayes) with their parameter (gamma and bandwidth) and for comparing the model between them we use the best obtained from this process.
+    The function if "param_optimizing(model, X, y)" that take an instance of Model object.
 
 Q8: Explain how you obtained the best hypothesis for each classifier after optimizing all parameters.
-R8:
+R8: After optimizing all parameters (gamma for SVM and bandwidth for Naive Bayes) we create the best hypothesis with the best value of the parameter, and we train it on the whole train.
+    That is the best hypothesis on which we will use the test set for the evaluation.
 
 
 Q9: Show the best parameters, the estimate of the true error for each hypothesis you obtained (your classifier and the two provided by the library), the ranges in the expected number of errors given by the approximate normal test, the McNemar test values, and discuss what you can conclude from this.
-R9:
+R9: 
+    Output:
+
+            *** BEST PARAMS ***
+            SVM      best gamma: 4.0     , default C : 1 
+            NB       best bandwidth: 0.24 
+            GNB      no params 
+
+            *** RESULTS ***
+            SVM      test err: 4.089815557337606 % 
+            NB       test err: 4.330392943063355 % 
+            GNB      test err: 9.462710505212513 % 
+
+    We can conclude that the one with best performance is NB that has bandwidth: 0.28 calculated from the optimization phase, but 
+    the performance of SVM is not as different, though.
+
+            *** NORMAL COMPARISON ***
+
+            SVM  =  50 ± 13.578597716933063
+            NB  =  54 ± 14.087695188843387
+            GNB  =  118 ± 20.25866482671914
+
+            According to the approximate normal test:
+            SVM  classifier(s) seems to have better performance
+
+    The SVM and NB are in the same error range, so we can't exlude that those have the same true error, and SVM seems to be a better classifier.
+    In addition, because none of them has low X value it seems like the test is reliable.
+
+            *** MCNEMAR COMPARISON ***
+
+            SVM vs. NB = 0.9
+            According to the McNemar test between SVM and NB :
+            the difference of performance is not significant
+
+            SVM vs. GNB = 40.80909090909091
+            According to the McNemar test between SVM and GNB :
+            the performance is different
+
+            NB vs. GNB = 38.16346153846154
+            According to the McNemar test between NB and GNB :
+            the performance is different
+    
+    From the McNemar comparison test we can see that because the pairs (SVM, GNB) and (NB, GNB) has a value bigger than 3.84, we can, with 95% of accuracy, affirm that they don't perform identically.
+    Regarding SVM and NB we can say that the difference of performance is not significant.
+
 
 
 Q10: (Optional) Show the estimate of the true error of the optimized SVM classifier (if you did the optional part of the work) and discuss whether it was worth doing this optimization. If you did not do the optional part leave this answer blank.
 R10:
+
+            *** BEST PARAMS ***
+
+            hyperSVM best gamma: 0.5064159070373617 ,  best   C : 0.22208315010640073 
+
+            *** RESULTS ***
+            hyperSVM test err: 4.009623095429027 % 
+
+    The SVM parameters using the hyper-parameter optimization can obtain better result, and just sampling the function 25 times (we set 25 as maximum number of iteration).
+
+
+            *** NORMAL COMPARISON ***
+
+            hypSVM  =  47 ± 13.18142602227672
+
+            According to the approximate normal test:
+            hypSVM  classifier(s) seems to have better performance
+
+    Also the normal comparisong let us understanding that is a valid pairs of parameters.
+
+            *** MCNEMAR COMPARISON ***
+
+            SVM vs. hypSVM = 0.19047619047619047
+            According to the McNemar test between SVM and hypSVM :
+            the difference of performance is not significant
+
+            NB vs. hypSVM = 1.894736842105263
+            According to the McNemar test between NB and hypSVM :
+            the difference of performance is not significant
+
+            GNB vs. hypSVM = 53.84615384615385
+            According to the McNemar test between GNB and hypSVM :
+            the performance is different
+
+    And the McNemar test shows that the performance of SVM, NB and hyperSVM are very similar. This is not valid for GNB.

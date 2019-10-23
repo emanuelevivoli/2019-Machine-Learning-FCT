@@ -83,22 +83,10 @@ class NaiveBayes:
 
         self.models_ = [KernelDensity(bandwidth=self.bandwidth).fit(Xi) for Xi in X_train_by_class]
 
+        # list dimension (1, 2)
         self.logpriors_ = [np.log(Xi.shape[0] / X_train.shape[0]) for Xi in X_train_by_class]
         
         return self
-
-    def class_prob(self, y_class):
-        """
-            Class Probability function. Calculates the probability of the class y_class.
-
-            Parameters
-            ----------
-            - y_class:
-                The class which we want to calculate the probability (prior probability).
-        """
-        n = len([item for item in self.y_train if item == y_class])
-        d = len(self.y_train)
-        return n * 1.0 /d
 
     def predict(self, X):
         """
@@ -121,6 +109,9 @@ class NaiveBayes:
                 The validation/test set in order to calculate the logarithm of the likelyhood for each class.
         """
         logprobs = np.array([model.score_samples(X) for model in self.models_]).T
+        # train dimension (996, 2)
+        # valid dimension (250, 2)
+
         result = logprobs + self.logpriors_
         return result
  
