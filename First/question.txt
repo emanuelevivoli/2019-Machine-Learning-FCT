@@ -7,10 +7,10 @@ QUESTIONS:
 
 Q1: Considering the data provided, explain the need to standardize the attribute values.
 R1: In the training set, the data provided have quite different range of values for each of the 4 features: 1st:[-3.873,3.681], 2nd[-53.11,33.831], 3rd[-19.65,30.201], 4th[-3.933,6.034].
-    For this reason, we need to standardize the values to avoid problems with different scales, and so to avoid to deal with these in the next steps.
-    More generally, it helps the bad confitioning of a matrix, that is the fraction between the largest (ln) and the smallest (l1) eigen-values. 
-    If the matrix is bad conditioned (fraction ln/l1 >> 1) than the calculus (especially the inversion of a matrix) becames difficult and not very accurate.
-    In fact bad conditioned matrixes have the consequence that little perturbation on the data corresponds to big perturbation on the solution.
+    For this reason, we need to standardize the values to avoid problems with different scales, and so to avoid dealing with these in the next steps.
+    More generally, it helps the bad conditioning of a matrix, that is the fraction between the largest (ln) and the smallest (l1) eigen-values. 
+    If the matrix is bad conditioned (fraction ln/l1 >> 1) than the calculus (especially the inversion of a matrix) becomes difficult and not very accurate.
+    In fact bad conditioned matrices have the consequence that little perturbation on the data corresponds to big perturbation on the solution.
 
 
 Q2: Explain how you calculated the parameters for standardization and how you used them in the test set.
@@ -20,9 +20,9 @@ R2: We calculated the mean and the standard deviation simply applying the concer
 
 
 Q3: Explain how you calculated the prior probability of an example belonging to a class (the probability before taking into account the attribute values of the example) in your Naive Bayes classifier implementation. You may include a relevant piece of your code if this helps you explain.
-R3: In the class NaiveBayes we have a metod fit that takes the two params X_train and y_train that are respectively the attributes' values and label for each sample in the train set.
+R3: In the class NaiveBayes we have a method fit that takes the two params X_train and y_train that are respectively the attributes' values and label for each sample in the train set.
     In this method we build our model calculating first, for each class, the a-priori probability of an example belonging to that class, and then we calculate for each class, and for each attribute, the KDE of the probability of the attribute of that specific classifier.
-    Regarding to the question: we calculate the a-priori probability separating the X_train by classes, and calculating empirically the probability as ration between element of that class and total length of X_train.
+    Regarding the question: we calculate the a-priori probability separating the X_train by classes, and calculating empirically the probability as ration between element of that class and total length of X_train.
     Then we apply the log to the a-priori probability, as described in the algorithm.
 
     The code example is:
@@ -36,7 +36,7 @@ R4: Another thing that we build is a list of models, one for each class, where e
     Once arrive a X_validation set we first apply every model in the list of models (divided per class) obtaining a 2D matrix with as rows the number of classes, as column the length of X_validation.
     This data are already the sum of the logarithm of the probability of every features, and it is written in the documentation of "score_samples" in "sklearn.neighbors":
     < Returns: The array of log(density) evaluations. These are normalized to be probability densities, so values will be low for high-dimensional data. >
-    Now that we have the probability of each element of X_validation belonging to each class, we add the logarithm a-priori probability belonging to each class and we calculate the argmax, finding the class with highest probability.
+    Now that we have the probability of each element of X_validation belonging to each class, we add the logarithm a-priori probability belonging to each class and we calculate the argmax, finding the class with the highest probability.
 
     The code example is:
     self.models_ = [KernelDensity(bandwidth=self.bandwidth).fit(Xi) for Xi in X_train_by_class]
@@ -45,20 +45,18 @@ R4: Another thing that we build is a list of models, one for each class, where e
     X_validation_class = self.all_class[np.argmax(result, 1)]
 
 Q5: Explain the effect of the bandwidth parameter on your classifier.
-R5: Our classifier has a "Gaussian" kernel (because we don't set it and by default it is gaussian). The kernel shape is fondamental for the algorithm of KDE.
+R5: Our classifier has a "Gaussian" kernel (because we don't set it and by default it is gaussian). The kernel shape is fundamental for the algorithm of KDE.
     What the algorithm do is to center a kernel to each point in the train set and calculate a value for each point as the weighted sum of point that are touched by the kernel and the kernel value in those points.
     After that we obtain a shape of the distribution that still needs to became probability, and than it is divided by the number of point that we have in order to have uniform integration.
-    A great example is given in this grafical game (https://mathisonian.github.io/kde/) where is possible not only to change the kernel function, but to visualize what does it mean to change the bandwidth and what effect can have in the result estimetion.
-
 
 Q6: Explain what effect the gamma parameter has on the SVM classifier.
 R6: A SVM classifier can assume very different forms depending on what kernel we choose and what parameters values.
     For the simplest example, when the data are linearly separable, none of those parameters make sense because just the maximization of the margin works well.
-    When the dataset became non linearly separable the complexity grows. Here we can introduce a parameter C that allows some of the point (slack variable) to be miss-classified adding to the goal function a relaxion of the SVM contraint.
-    But this can not be enougth, than SVMs can be kernelized using some interesting dual optimization techniques.
+    When the dataset become non-linearly separable the complexity grows. Here we can introduce a parameter C that allows some of the point (slack variable) to be miss-classified adding to the goal function a relation of the SVM constraint.
+    But this can not be enough, then SVMs can be kernelized using some interesting dual optimization techniques.
     One interesting kernel function is the Gaussian/rbf kernel that has a parameter gamma that controls the tradeoff between error due to bias and variance in your model. 
     If you have a very large value of gamma, then even if your input are very similar, the kernel value will be small. That means that the support vector doesn't mean a lot for the classification of your input.
-    And so this allows the SVM to capture more the complexity, but it can became an overfitting of the train set if gamma is too high. Low bias/High variance model.
+    And so this allows the SVM to capture more the complexity, but it can become an overfitting of the train set if gamma is too high. Low bias/High variance model.
     On the other hand if gamma is too small it means that the model has a big influence on determining the class of the new points. Low variance model.
 
 
