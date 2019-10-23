@@ -4,6 +4,7 @@ import NaiveBayes as nb
 from sklearn.model_selection import StratifiedKFold
 import matplotlib.pyplot as plt
 from sklearn.naive_bayes import GaussianNB
+from itertools import combinations
 
 N_SPLIT = 5
 SEED = 42
@@ -246,29 +247,37 @@ def normal_comparing(dic, N):
 
     return
 
-def first_present_second_not(indexesA, indexesB):
-    result = 0
-    for el in indexesA:
-        if el not in indexesB:
-            result = result + 1
-    return result
 
-def compare_using_mcnemar(nameFirst, indexesFirst, nameSecond, indexesSecond):
-    print()
+def set_substraction(set_A, set_B):
+    # [A and B are set] A.difference(B) is equal to the elements present in A but not in B
+    return len(set(set_A).difference(set(set_B)))
 
-    valueFirst = first_present_second_not(indexesFirst, indexesSecond)
-    valueSecond = first_present_second_not(indexesSecond, indexesFirst)
 
-    numerator = (abs(valueFirst - valueSecond) - 1) ** 2
-    sub = valueFirst + valueSecond
-    if (sub == 0):
-        print("Impossible to compare due to the data")
-    else:
-        result = numerator / sub
-        print(nameFirst, " vs. ", nameSecond, " = ", result)
-        print("According to the McNemar test between", nameFirst, " and ", nameSecond, ": ")
-        if (result > 3.84):
-            print(" the performance is different")
+def mcnemar_comparing(dic):
+
+    # keys_pairs = set([ (a, b) for a in dic.keys() for b in dic.keys() if a != b])
+
+    for key_A, key_B in combinations(dic.keys(),2):
+        name_A = key_A
+        name_B = key_B
+
+        err_indexes_A = dic[key_A][2]
+        err_indexes_B = dic[key_B][2]
+
+        e01 = set_substraction(err_indexes_A, err_indexes_B)
+        e10 = set_substraction(err_indexes_B, err_indexes_A)
+
+        numer = (abs(e01 - e10) - 1) ** 2
+        denom = e01 + e10
+        if (denom == 0):
+            print(f'\n {name_A} vs. {name_B} \n Impossible to compare due to the data')
         else:
-            print(" the difference of performance is not significant")
+            chisqrt = numer / denom
+            print(f'\n {name_A} vs. {name_B} = {chisqrt}')
+            print(f'According to the McNemar test between {name_A} and {name_B} :')
+            
+            if (chisqrt > 3.84):
+                print(' the performance is different')
+            else:
+                print(' the difference of performance is not significant')
 
