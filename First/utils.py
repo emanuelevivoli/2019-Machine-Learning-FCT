@@ -175,8 +175,8 @@ class Result():
         t = self.interval
         plt.plot(t, self.train_results, 'bo', label='training error')
         plt.plot(t, self.valid_results, 'ro', label='cross-validation error')
-        plt.xlabel('error')
-        plt.ylabel(f'{self.param_name}')
+        plt.ylabel('error')
+        plt.xlabel(f'{self.param_name}')
         plt.grid(True)
         plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
         plt.savefig(f'{self.name}.png', bbox_inches='tight')
