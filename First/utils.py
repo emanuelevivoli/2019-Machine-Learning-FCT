@@ -6,8 +6,6 @@ import matplotlib.pyplot as plt
 from sklearn.naive_bayes import GaussianNB
 from itertools import combinations
 import csv
-import rbfopt
-
 
 N_SPLIT = 5
 SEED = 42
@@ -291,7 +289,8 @@ def mcnemar_comparing(dic):
 
 
 def hyperparameter_optimization(X_train, y_train, X_test , y_test):
-
+    
+    import rbfopt
     # X_test , y_test
     X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.33, random_state=SEED, stratify=y_train)
 
