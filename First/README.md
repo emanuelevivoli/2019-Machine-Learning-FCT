@@ -30,7 +30,6 @@ The goal of this assignment is to parametrize, fit and **compare Naive Bayes and
 ## Steps to do
 
 1) You must implement your own **Naïve Bayes classifier** using **Kernel Density Estimation** for the probability distributions of the feature values. For this, you can use any code from the lectures, lecture notes and tutorials that you find useful. Also, use the _KernelDensity_ class from _sklearn.neighbors.kde_ for the density estimation.
-
 You will need to **find the optimum value** for the bandwitdh parameter of the kernel density estimators you will use. Use the training set provided in the **TP1_train.tsv** for this.
 
 2) The second classifier will be the **Gaussian Naïve Bayes classifier** in the sklearn.naive_bayes.GaussianNB class. You do not need to adjust parameters for this classifier

@@ -17,6 +17,7 @@ from sklearn.model_selection import StratifiedKFold
 
 import matplotlib.pyplot as plt
 
+# SEED = 42
 
 def main():
     data = load_data('TP1_train.tsv')
@@ -76,7 +77,10 @@ def load_data(file_name):
     # prende i dati da file, li mette in un ndArray
     mat = np.loadtxt(file_name, delimiter='\t')
     # randomizzo le righe
-    np.random.shuffle(mat)
+    
+    # np.random.seed(SEED)
+    # np.random.shuffle(mat)
+    
     # prendo l'ultima colonna (quella delle classe)
     Ys = mat[:, [-1]]
     # prendo le righe, eccetto l'ultima colonna
@@ -99,7 +103,10 @@ def load_data_mean_stdevs(file_name, means, stdevs):
     # prende i dati da file, li mette in un ndArray
     mat = np.loadtxt(file_name, delimiter='\t')
     # randomizzo le righe
-    np.random.shuffle(mat)
+    
+    # np.random.seed(SEED)
+    # np.random.shuffle(mat)
+    
     # prendo l'ultima colonna (quella delle classe)
     Ys = mat[:, [-1]]
     # prendo le righe, eccetto l'ultima colonna
@@ -320,7 +327,7 @@ def plot_together_svm(svm_te, svm_cve):
 
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
 
-    plt.savefig('SVM.png', bbox_inches='tight')
+    plt.savefig('SVM_old.png', bbox_inches='tight')
     plt.show()
 
     plt.close()
@@ -339,8 +346,8 @@ def plot_together_mynb(te, cve):
 
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
 
-    plt.savefig('NB.png', bbox_inches='tight')
+    plt.savefig('NB_old.png', bbox_inches='tight')
     plt.show()
     plt.close()
 
-
+main()

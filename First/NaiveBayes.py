@@ -120,8 +120,7 @@ class NaiveBayes:
             - X:
                 The validation/test set in order to calculate the logarithm of the likelyhood for each class.
         """
-        logprobs = np.array([model.score_samples(X)
-                             for model in self.models_]).T
+        logprobs = np.array([model.score_samples(X) for model in self.models_]).T
         result = logprobs + self.logpriors_
         return result
  
@@ -139,16 +138,16 @@ class NaiveBayes:
         """
         return accuracy_score(y_real, y_pred)
 
-    def score(self,x,y):
+    def score(self,X,y):
         """
-            Score function. 
+            Score function. It gives the score of the classifier for the dataset example [X, y]
 
             Parameters
             ----------
-            - x:
-                \??
+            - X:
+                dataset X that i want to test (only features)
             - y:
-                \??
+                the labels corresponding to the X datas
         """
-        return self.classifierScore(self.predict(x), y)
+        return self.classifierScore(self.predict(X), y)
     
