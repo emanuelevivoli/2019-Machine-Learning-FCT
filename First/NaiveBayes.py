@@ -33,9 +33,9 @@ class NaiveBayes:
         
             Return the accuracy score of the classifier given the predicted and the real y.
         
-        - score: Score function. It gives the score of the classifier for the dataset example [X, y]
+        - score:
         
-            \??
+            Score function. It gives the score of the classifier for the dataset example [X, y]
 
         Notes
         -----
