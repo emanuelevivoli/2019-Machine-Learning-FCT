@@ -70,9 +70,8 @@ class NaiveBayes:
 
             Notes
             -----
-            Naive Bayes is a Lazy Learning algorithm, so usually the model creation computation is done
-            when is requested a predict operation. In this class the computation is done in the fit function.
-            We still have to decide where is better to add this functionality.
+            This fit function has the same implementation logic of many examples. 
+            In order to cite two of them: "Python Data Science Handbook", and "KDE Classifier" from Kaggle.
         """
         self.X_train = np.array(X_train)
         self.y_train = np.array(y_train)

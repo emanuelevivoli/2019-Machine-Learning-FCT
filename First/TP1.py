@@ -4,13 +4,34 @@ import argparse
 parser = argparse.ArgumentParser(description='Process some integers.')
 
 parser.add_argument('--hyper-opt', 
-                    default=False,
-                    action='store_true',
-                    help='[default False] it allow to use hyperparameters optimization for C and gamma (SVM model)')
+                    default="",
+                    help='[default ""] It is the path of the solver bonmin. It allows to use hyperparameters optimization for C and gamma (SVM model)')
+
+parser.add_argument('--opti-steps', 
+                    default=25,
+                    help='[default 25] number of steps in optimization process')
+
+parser.add_argument('--seed', 
+                    default=30,
+                    help='[default 30] is the seed for the randomize processes (shuffle)')
+
+parser.add_argument('--n-split', 
+                    default=5,
+                    help='[default 5] number of split in k-fold cross validation')
 
 args = parser.parse_args()
 
-with_hyper_optimization = args.hyper_opt
+with_hyper_optimization = bool(args.hyper_opt)
+
+if with_hyper_optimization:
+    set_solver_path(args.hyper_opt if bool(args.hyper_opt) else bool(args.hyper_opt))
+    set_opti_steps(int(args.opti_steps))
+
+set_seed(int(args.seed))
+
+set_split(int(args.n_split))
+
+
 
 def main():
     

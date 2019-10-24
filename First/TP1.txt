@@ -77,23 +77,23 @@ Q9: Show the best parameters, the estimate of the true error for each hypothesis
 R9: 
     Output:
 
-            *** BEST PARAMS ***
-            SVM      best gamma: 4.0     , default C : 1 
-            NB       best bandwidth: 0.24 
+                *** BEST PARAMS ***
+            SVM      best gamma: 1.6 , default C : 1 
+            NB       best bandwidth: 0.18 
             GNB      no params 
 
-            *** RESULTS ***
-            SVM      test err: 4.089815557337606 % 
-            NB       test err: 4.330392943063355 % 
+                *** RESULTS ***
+            SVM      test err: 4.250200481154776 % 
+            NB       test err: 4.570970328789093 % 
             GNB      test err: 9.462710505212513 % 
 
     We can conclude that the one with best performance is NB that has bandwidth: 0.28 calculated from the optimization phase, but 
     the performance of SVM is not as different, though.
 
-            *** NORMAL COMPARISON ***
+                *** NORMAL COMPARISON ***
 
-            SVM  =  50 ± 13.578597716933063
-            NB  =  54 ± 14.087695188843387
+            SVM  =  53 ± 13.962492177643142
+            NB  =  57 ± 14.455521139668624
             GNB  =  118 ± 20.25866482671914
 
             According to the approximate normal test:
@@ -102,17 +102,17 @@ R9:
     The SVM and NB are in the same error range, so we can't exlude that those have the same true error, and SVM seems to be a better classifier.
     In addition, because none of them has low X value it seems like the test is reliable.
 
-            *** MCNEMAR COMPARISON ***
+                *** MCNEMAR COMPARISON ***
 
-            SVM vs. NB = 0.9
+            SVM vs. NB = 0.5
             According to the McNemar test between SVM and NB :
             the difference of performance is not significant
 
-            SVM vs. GNB = 40.80909090909091
+            SVM vs. GNB = 39.00952380952381
             According to the McNemar test between SVM and GNB :
             the performance is different
 
-            NB vs. GNB = 38.16346153846154
+            NB vs. GNB = 32.432432432432435
             According to the McNemar test between NB and GNB :
             the performance is different
     
@@ -124,37 +124,42 @@ R9:
 Q10: (Optional) Show the estimate of the true error of the optimized SVM classifier (if you did the optional part of the work) and discuss whether it was worth doing this optimization. If you did not do the optional part leave this answer blank.
 R10:
 
-            *** BEST PARAMS ***
+                *** BEST PARAMS ***
 
-            hyperSVM best gamma: 0.5064159070373617 ,  best   C : 0.22208315010640073 
+            hyperSVM best gamma: 0.3817380427992093 ,  best   C : 0.24799690757735957 
 
-            *** RESULTS ***
-            hyperSVM test err: 4.009623095429027 % 
+                *** RESULTS ***
+
+            hyperSVM test err: 3.8492381716118684 %
 
     The SVM parameters using the hyper-parameter optimization can obtain better result, and just sampling the function 25 times (we set 25 as maximum number of iteration).
 
 
-            *** NORMAL COMPARISON ***
+                *** NORMAL COMPARISON ***
 
-            hypSVM  =  47 ± 13.18142602227672
+            hypSVM  =  48 ± 13.315364358032761
 
             According to the approximate normal test:
             hypSVM  classifier(s) seems to have better performance
 
     Also the normal comparisong let us understanding that is a valid pairs of parameters.
 
-            *** MCNEMAR COMPARISON ***
+                *** MCNEMAR COMPARISON ***
 
-            SVM vs. hypSVM = 0.19047619047619047
+            SVM vs. hypSVM = 0.7619047619047619
             According to the McNemar test between SVM and hypSVM :
             the difference of performance is not significant
 
-            NB vs. hypSVM = 1.894736842105263
+            NB vs. hypSVM = 2.206896551724138
             According to the McNemar test between NB and hypSVM :
             the difference of performance is not significant
 
-            GNB vs. hypSVM = 53.84615384615385
+            GNB vs. hypSVM = 50.648936170212764
             According to the McNemar test between GNB and hypSVM :
-            the performance is different
+            the performance is different   
 
     And the McNemar test shows that the performance of SVM, NB and hyperSVM are very similar. This is not valid for GNB.
+    Here this optimization can be avoided.
+    It could be worth to do this optimization when we clarily see that SVM and NB don't obtain the same performance, and NB overperformes SVM.
+    Doing the hyperparameter optimization on gamma and C (with a bigger number of iteration than 25) we can obtain results that
+    are far better than SVM, and in the case of NB performances > SVM performances, we can hopefully obtain even better performance than NB.

@@ -7,8 +7,21 @@ from sklearn.naive_bayes import GaussianNB
 from itertools import combinations
 import csv
 
-N_SPLIT = 5
-SEED = 42
+def set_opti_steps(steps):
+    global num_evaluations
+    num_evaluations = steps
+
+def set_seed(seed):
+    global SEED
+    SEED = seed
+
+def set_split(n_split):
+    global N_SPLIT
+    N_SPLIT = n_split
+
+def set_solver_path(path):
+    global minlp_solver_path
+    minlp_solver_path = path
 
 class Dataset:
 
@@ -300,14 +313,14 @@ def hyperparameter_optimization(X_train, y_train, X_test , y_test):
 
     # hyperparameters domains
     hyp_domains = {"gamma": (0.02, 0.62), "C": (1.e-03, 1.e+02)}
-    num_evaluations = 25
 
-    print("Beginning hyperparameters optimization with RBF")
+    print(" *** HYPERPARAMETER OPTIMIZATION WITH RBF ***\n")
+
     csv_header = ['hyp_opt', 'gamma', 'C', 'train_err', 'val_err', 'test_err']
 
-    with open(csv_evaluations_file, mode='a') as file_csv:
-        file_csv = csv.writer(file_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        file_csv.writerow(csv_header)
+    # with open(csv_evaluations_file, mode='a') as file_csv:
+    #     file_csv = csv.writer(file_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    #     file_csv.writerow(csv_header)
     
     hyp_opt = "RBF"
     var_lower = [ hyp_domains["gamma"][0], hyp_domains["C"][0] ]
@@ -324,21 +337,20 @@ def hyperparameter_optimization(X_train, y_train, X_test , y_test):
 
         svm_test_acc = svm_model.predict(X_test , y_test)
 
-        with open(csv_evaluations_file, mode='a') as file_csv:
-            file_csv = csv.writer(file_csv, delimiter=',', quoting=csv.QUOTE_MINIMAL)
-            # ['hyp_opt', 'gamma', 'C', 'train_accuracy', 'val_accuracy', 'test_accuracy']
-            file_csv.writerow([hyp_opt, str(gamma), str(C), str(1 - svm_train_acc), str(1 - svm_val_acc), str(1 - svm_test_acc)])
+        # with open(csv_evaluations_file, mode='a') as file_csv:
+        #     file_csv = csv.writer(file_csv, delimiter=',', quoting=csv.QUOTE_MINIMAL)
+        #     # ['hyp_opt', 'gamma', 'C', 'train_accuracy', 'val_accuracy', 'test_accuracy']
+        #     file_csv.writerow([hyp_opt, str(gamma), str(C), str(1 - svm_train_acc), str(1 - svm_val_acc), str(1 - svm_test_acc)])
 
         return 1 - svm_test_acc
 
     bb = rbfopt.RbfoptUserBlackBox(2, var_lower, var_upper, ['R', 'R'], evaluate_RBF)
-    # minlp_solver_path='/Applications/bonmin', 
-    settings = rbfopt.RbfoptSettings(minlp_solver_path='/Applications/bonmin', max_evaluations=num_evaluations, target_objval= 0.0)
+    # minlp_solver_path='/path/to/bonmin'
+    settings = rbfopt.RbfoptSettings(rand_seed=SEED, print_solver_output=False, minlp_solver_path=minlp_solver_path, max_evaluations=num_evaluations, target_objval= 0.0)
     alg = rbfopt.RbfoptAlgorithm(settings, bb)
     val, x, itercount, evalcount, fast_evalcount = alg.optimize()
     print("Results with RBF optimizer: " + str({"target": val, "gamma": x[0], "C": x[1]}) + "\n")
-    with open(csv_evaluations_file, mode='a') as file_csv:
-        file_csv = csv.writer(file_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        file_csv.writerow(['', '', '', '', '', '', '', ''])
-
+    # with open(csv_evaluations_file, mode='a') as file_csv:
+    #     file_csv = csv.writer(file_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    #     file_csv.writerow(['', '', '', '', '', '', '', ''])
     return x
