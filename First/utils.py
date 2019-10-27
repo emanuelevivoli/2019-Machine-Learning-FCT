@@ -1,11 +1,12 @@
 import numpy as np
+np.seterr(divide='ignore', invalid='ignore')
+
 from sklearn import svm
 import NaiveBayes as nb
 from sklearn.model_selection import StratifiedKFold, train_test_split
 import matplotlib.pyplot as plt
 from sklearn.naive_bayes import GaussianNB
 from itertools import combinations
-import csv
 
 def set_opti_steps(steps):
     global num_evaluations
@@ -13,7 +14,7 @@ def set_opti_steps(steps):
 
 def set_seed(seed):
     global SEED
-    SEED = seed
+    SEED = None if seed == None else int(seed)
 
 def set_split(n_split):
     global N_SPLIT
@@ -22,6 +23,10 @@ def set_split(n_split):
 def set_solver_path(path):
     global minlp_solver_path
     minlp_solver_path = path
+
+def set_csv(preference):
+    global csv_available
+    csv_available = preference
 
 class Dataset:
 
@@ -56,6 +61,7 @@ class Loader:
         # take data from the file and put all in a ndArray
         mat = np.loadtxt(file_name, delimiter='\t')
         # randomize the rows
+        
         np.random.seed(SEED)
         np.random.shuffle(mat)
 
@@ -103,30 +109,21 @@ class Model:
 
     def get_result(self, X_train, y_train, X_val, y_val, params):
         self.build_model(params)
-        # self.print_name()
         self.model.fit(X_train, y_train.ravel())
 
-        t_predictions = self.model.predict(X_train)
-        v_predictions = self.model.predict(X_val)
-        
-        ern, eri = find_error_values(t_predictions, y_train)
-        el_num = np.size(t_predictions)
-        t_accuracy = (1 - ern / el_num)
+        t_accuracy, ern, eri = self.predict(X_train, y_train)
+        v_accuracy, ern, eri = self.predict(X_val, y_val)
 
-        ern, eri = find_error_values(v_predictions, y_val)
-        el_num = np.size(v_predictions)
-        v_accuracy = (1 - ern / el_num)
+        return t_accuracy, v_accuracy, ern, eri
 
-        return v_accuracy, t_accuracy, ern, eri
+    def predict(self, X, y):
+        predictions = self.model.predict(X)
 
-    def predict(self, X_test, y_test):
-        test_predictions = self.model.predict(X_test)
+        ern, eri = find_error_values(predictions, y)
+        el_num = np.size(predictions)
+        accuracy = (1 - ern / el_num)
 
-        ern, eri = find_error_values(test_predictions, y_test)
-        el_num = np.size(test_predictions)
-        test_accuracy = (1 - ern / el_num)
-
-        return test_accuracy
+        return accuracy, ern, eri
 
 
 class SVM(Model):
@@ -141,6 +138,9 @@ class SVM(Model):
     
     def get_result(self, X_train, y_train, X_val, y_val, params):
         return super().get_result(X_train, y_train, X_val, y_val, params)
+
+    def predict(self, X_test, y_test):
+        return super().predict(X_test, y_test)
 
     def get_interval(self):
         return self.interval
@@ -157,6 +157,9 @@ class NB(Model):
     
     def get_result(self, X_train, y_train, X_val, y_val, params):
         return super().get_result(X_train, y_train, X_val, y_val, params)
+    
+    def predict(self, X_test, y_test):
+        return super().predict(X_test, y_test)
 
     def get_interval(self):
         return self.interval
@@ -171,6 +174,9 @@ class GaussNB(Model):
     
     def get_result(self, X_train, y_train, X_val, y_val, params=None):
         return super().get_result(X_train, y_train, X_val, y_val, params)
+    
+    def predict(self, X_test, y_test):
+        return super().predict(X_test, y_test)
 
 class Result():
 
@@ -197,20 +203,15 @@ class Result():
 
 
 def find_error_values(a, b):
-    error_n = 0
-    error_indexes = []
-    for i in range(0, np.size(a, 0)):
-        if (a[i] != b[i]):
-            error_n = error_n + 1
-            error_indexes.append(i)
-    return error_n, error_indexes
+    error_indexes = [idx for idx, (i, j) in enumerate(zip(a, b)) if i != j]
+    return len(error_indexes), error_indexes
 
 def param_optimizing(model, X, y):
 
     valid_results = []
     train_results = []
 
-    skf = StratifiedKFold(n_splits=N_SPLIT)
+    skf = StratifiedKFold(n_splits=N_SPLIT, shuffle=False)
 
     min_valid_error = float('inf')
     min_train_error = float('inf')
@@ -227,7 +228,7 @@ def param_optimizing(model, X, y):
             X_train, y_train = X[train_index], y[train_index] 
             X_test , y_test  = X[test_index] , y[test_index]
 
-            one_fold_valid_acc, one_fold_train_acc, _, _ = model.get_result(X_train, y_train, X_test, y_test, params=[p, 1])
+            one_fold_train_acc, one_fold_valid_acc, _, _ = model.get_result(X_train, y_train, X_test, y_test, params=[p, 1])
             
             sum_valid_acc += one_fold_valid_acc
             sum_train_acc += one_fold_train_acc
@@ -269,12 +270,10 @@ def normal_comparing(dic, N):
     return
 
 def set_substraction(set_A, set_B):
-    # [A and B are set] A.difference(B) is equal to the elements present in A but not in B
+
     return len(set(set_A).difference(set(set_B)))
 
 def mcnemar_comparing(dic):
-
-    # keys_pairs = set([ (a, b) for a in dic.keys() for b in dic.keys() if a != b])
 
     for key_A, key_B in combinations(dic.keys(),2):
         name_A = key_A
@@ -304,7 +303,7 @@ def mcnemar_comparing(dic):
 def hyperparameter_optimization(X_train, y_train, X_test , y_test):
     
     import rbfopt
-    # X_test , y_test
+    
     X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.33, random_state=SEED, stratify=y_train)
 
     ''' Radial Basis Function hyperparameters optimization '''
@@ -318,9 +317,12 @@ def hyperparameter_optimization(X_train, y_train, X_test , y_test):
 
     csv_header = ['hyp_opt', 'gamma', 'C', 'train_err', 'val_err', 'test_err']
 
-    # with open(csv_evaluations_file, mode='a') as file_csv:
-    #     file_csv = csv.writer(file_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-    #     file_csv.writerow(csv_header)
+    if csv_available:
+        import csv
+
+        with open(csv_evaluations_file, mode='a') as file_csv:
+            file_csv = csv.writer(file_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            file_csv.writerow(csv_header)
     
     hyp_opt = "RBF"
     var_lower = [ hyp_domains["gamma"][0], hyp_domains["C"][0] ]
@@ -332,17 +334,19 @@ def hyperparameter_optimization(X_train, y_train, X_test , y_test):
 
         svm_model = SVM() 
 
-        svm_val_acc, svm_train_acc, _, _ = \
+        svm_train_acc, svm_val_acc, _, _ = \
                             svm_model.get_result(X_train, y_train, X_val, y_val, params=[gamma, C])
 
-        svm_test_acc = svm_model.predict(X_test , y_test)
+        # svm_test_acc, _, _ = svm_model.predict(X_test, y_test)
 
-        # with open(csv_evaluations_file, mode='a') as file_csv:
-        #     file_csv = csv.writer(file_csv, delimiter=',', quoting=csv.QUOTE_MINIMAL)
-        #     # ['hyp_opt', 'gamma', 'C', 'train_accuracy', 'val_accuracy', 'test_accuracy']
-        #     file_csv.writerow([hyp_opt, str(gamma), str(C), str(1 - svm_train_acc), str(1 - svm_val_acc), str(1 - svm_test_acc)])
+        if csv_available:
 
-        return 1 - svm_test_acc
+            with open(csv_evaluations_file, mode='a') as file_csv:
+                file_csv = csv.writer(file_csv, delimiter=',', quoting=csv.QUOTE_MINIMAL)
+                # ['hyp_opt', 'gamma', 'C', 'train_accuracy', 'val_accuracy', 'test_accuracy']
+                file_csv.writerow([hyp_opt, str(gamma), str(C), str(1 - svm_train_acc), str(1 - svm_val_acc)]) #, str(1 - svm_test_acc)])
+
+        return 1 - svm_val_acc
 
     bb = rbfopt.RbfoptUserBlackBox(2, var_lower, var_upper, ['R', 'R'], evaluate_RBF)
     # minlp_solver_path='/path/to/bonmin'
@@ -350,7 +354,10 @@ def hyperparameter_optimization(X_train, y_train, X_test , y_test):
     alg = rbfopt.RbfoptAlgorithm(settings, bb)
     val, x, itercount, evalcount, fast_evalcount = alg.optimize()
     print("Results with RBF optimizer: " + str({"target": val, "gamma": x[0], "C": x[1]}) + "\n")
-    # with open(csv_evaluations_file, mode='a') as file_csv:
-    #     file_csv = csv.writer(file_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-    #     file_csv.writerow(['', '', '', '', '', '', '', ''])
+    
+    if csv_available:
+        with open(csv_evaluations_file, mode='a') as file_csv:
+            file_csv = csv.writer(file_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            file_csv.writerow(['', '', '', '', '', '', '', ''])
+    
     return x

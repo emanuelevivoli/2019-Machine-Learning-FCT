@@ -66,15 +66,14 @@ class NaiveBayes:
         self.X_train = np.array(X_train)
         self.y_train = np.array(y_train)
         
-        self.all_class = np.unique(self.y_train)
-        
-        X_train_by_class = [X_train[y_train == yi] for yi in self.all_class]
+        self.classes_ = np.sort(np.unique(self.y_train))
 
-        self.models_ = [KernelDensity(bandwidth=self.bandwidth).fit(Xi) for Xi in X_train_by_class]
+        training_sets = [self.X_train[self.y_train == yi] for yi in self.classes_]
 
-        # list dimension (1, 2)
-        self.logpriors_ = [np.log(Xi.shape[0] / X_train.shape[0]) for Xi in X_train_by_class]
-        
+        self.models_ = [KernelDensity(bandwidth=self.bandwidth).fit(Xi) for Xi in training_sets]
+
+        self.logpriors_ = [np.log(Xi.shape[0] / self.X_train.shape[0]) for Xi in training_sets]
+
         return self
 
     def predict(self, X):
@@ -86,7 +85,7 @@ class NaiveBayes:
             - X:
                 The validation/test set in order to predict the class for every element in X.
         """
-        return self.all_class[np.argmax(self.predict_proba(X), 1)]
+        return self.classes_[np.argmax(self.predict_proba(X), 1)]
     
     def predict_proba(self, X):
         """
@@ -98,11 +97,10 @@ class NaiveBayes:
                 The validation/test set in order to calculate the logarithm of the likelyhood for each class.
         """
         logprobs = np.array([model.score_samples(X) for model in self.models_]).T
-        # train dimension (996, 2)
-        # valid dimension (250, 2)
 
-        result = logprobs + self.logpriors_
-        return result
+        result = np.exp(logprobs + self.logpriors_)
+
+        return result / result.sum(1, keepdims=True)
  
     def classifierScore(self,y_pred, y_real):    
         """
