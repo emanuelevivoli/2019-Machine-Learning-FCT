@@ -75,7 +75,7 @@ R8: After optimizing all parameters (gamma for SVM and bandwidth for Naive Bayes
 
 Q9: Show the best parameters, the estimate of the true error for each hypothesis you obtained (your classifier and the two provided by the library), the ranges in the expected number of errors given by the approximate normal test, the McNemar test values, and discuss what you can conclude from this.
 R9: 
-    Output:
+    Output (obtained running the program with --seed=30):
 
                 *** BEST PARAMS ***
             SVM      best gamma: 1.6 , default C : 1 
