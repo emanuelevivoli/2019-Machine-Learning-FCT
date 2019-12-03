@@ -6,12 +6,12 @@ Auxiliary functions for assignment 2
 import numpy as np
 from skimage.io import imread
 
-def images_as_matrix(N=563):
+def images_as_matrix(N=563, folder=''):
     """
     Reads all N images in the images folder (indexed 0 through N-1)
     returns a 2D numpy array with one image per row and one pixel per column
     """
-    return np.array([imread(f'images/{ix}.png',as_gray=True).ravel() for ix in range(563)])
+    return np.array([imread(f'{folder}images/{ix}.png',as_gray=True).ravel() for ix in range(563)])
         
 
 def report_clusters(ids, labels, report_file):
