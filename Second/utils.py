@@ -40,7 +40,7 @@ class Loader:
         return self.dataset
 
     def getLabels(self):
-        return self.labels
+        return self.labels[:,0], self.labels[:,1]
 
     def getClassSplitDataset(self):
         return self.class_split_dataset

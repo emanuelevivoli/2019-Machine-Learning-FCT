@@ -5,7 +5,10 @@ from sklearn.manifold import Isomap
 
 # libraries for general utilities
 import numpy as np 
+from matplotlib import pyplot as plt
 from pandas.plotting import scatter_matrix
+from sklearn.preprocessing import StandardScaler
+from sklearn.feature_selection import f_classif
 from pandas import DataFrame
 
 def features_creation(dataset, NUMBER_FEATURES = 6):
@@ -13,6 +16,7 @@ def features_creation(dataset, NUMBER_FEATURES = 6):
         FEATURES CREATION
         
     """
+
     # extract 6 features wirh PCA
     pca = PCA(n_components=NUMBER_FEATURES)
     pca_dataset_embedded = pca.fit_transform(dataset)
@@ -32,7 +36,7 @@ def features_creation(dataset, NUMBER_FEATURES = 6):
 
 
 def importance_test_SVM(features, labels, title='importance_test_SVM'):
-        """
+    """
         FEATURES IMPORTANCE GRAPH using SVM and different scale method such
         - NORMALIZATION
         - STANDARDIZATION
@@ -42,20 +46,21 @@ def importance_test_SVM(features, labels, title='importance_test_SVM'):
         We use the default selection function to select the
         most significant features
     """
+
     from sklearn.feature_selection import SelectKBest
     from sklearn.pipeline import make_pipeline
-    from sklearn.preprocessing import MinMaxScaler, Normalizer, StandardScaler
+    from sklearn.preprocessing import MinMaxScaler, Normalizer
     from sklearn.svm import LinearSVC
     from sklearn.model_selection import train_test_split
 
-    feat = features[labels!=0]
+    feat = features[labels!=0,:]
     lbs = labels[labels!=0]
 
     k_selection = 'all'
 
     # Split dataset to select feature and evaluate the classifier
     X_train, X_test, y_train, y_test = train_test_split(
-            feat, lbs, stratify=lbs, random_state=4
+        feat, lbs, stratify=lbs, random_state=4
     )
 
     selector = SelectKBest(f_classif, k=k_selection)
@@ -64,7 +69,7 @@ def importance_test_SVM(features, labels, title='importance_test_SVM'):
     scores /= scores.sum()
     X_indices = np.arange(feat.shape[-1])
     plt.bar(X_indices, scores, width=.2,
-            label=r'Univariate score ($-Log(p_{value})$)', color='darkorange')#,edgecolor='black')
+        label=r'Univariate score ($-Log(p_{value})$)', color='darkorange')#,edgecolor='black')
 
     # #############################################################################
     # Compare to the weights of an SVM
@@ -77,7 +82,7 @@ def importance_test_SVM(features, labels, title='importance_test_SVM'):
     svm_weights /= svm_weights.sum()
 
     plt.bar(X_indices + .2, svm_weights, width=.2, label='SVM weight',
-            color='navy')#,edgecolor='black')
+        color='navy')#,edgecolor='black')
 
     # #############################################################################
     # SVM on Normalized input
@@ -141,21 +146,19 @@ def importance_test_SVM(features, labels, title='importance_test_SVM'):
     plt.axis('tight')
     plt.legend(loc='upper right')
 
-    plt.savefig(r"imgs/{title}.png")
+    plt.savefig(f"imgs/importance_test_SVM.png")
     
 
 
-def features_standardization(features, labels):
+def features_standardization(features):
     """
         FEATURES STANDARDIZATION
         
     """
     scaler = StandardScaler()
     features_std = scaler.fit_transform(features)
-    ids = labels[:,0]
-    labels = labels[:,1]
 
-    return features_std, ids, labels
+    return features_std
 
 def features_correlation_matrix(features, title='correlation_matrix'):
     """
@@ -164,7 +167,7 @@ def features_correlation_matrix(features, title='correlation_matrix'):
     """
     corr = abs(DataFrame(features).corr())
     corr.style.background_gradient(cmap='coolwarm').format("{:.3}")
-    plt.savefig(r"imgs/{title}.png")
+    plt.savefig(f"imgs/{title}.png")
     return corr
 
 def correlated_features(corr, CORRELATION_LIMIT=0.6):
@@ -175,7 +178,7 @@ def correlated_features(corr, CORRELATION_LIMIT=0.6):
     (xs, ys) = np.where((corr>CORRELATION_LIMIT)==True)
     pairs = [ [x, y] for x,y in zip(xs, ys) if x>y ]
     indexes = np.array([int(x) for x in np.union1d(np.ravel(pairs),[])])
-    return indexes
+    return indexes, pairs
 
 def correlated_scatter_matrix(features_std, indexes, title='correlated_scatter_matrix'):
     """
@@ -193,7 +196,7 @@ def correlated_scatter_matrix(features_std, indexes, title='correlated_scatter_m
     #x labels
     [plt.setp(item.xaxis.get_label(), 'size', 13) for item in Axes.ravel()]
 
-    plt.savefig(r"imgs/{title}.png")
+    plt.savefig(f"imgs/{title}.png")
 
 
 def shapiro_ranking(final_feat, labels, title='shapiro_ranking'):
@@ -207,7 +210,7 @@ def shapiro_ranking(final_feat, labels, title='shapiro_ranking'):
     visualizer.transform(final_feat[labels!=0])        # Transform the data
     # visualizer.show()              # Finalize and render the figure
 
-    plt.savefig(r"imgs/{title}.png")
+    plt.savefig(f"imgs/{title}.png")
 
 
 def pearson_ranking(final_feat, labels, title='pearson_ranking'):
@@ -223,7 +226,7 @@ def pearson_ranking(final_feat, labels, title='pearson_ranking'):
     visualizer.fit(final_feat[labels!=0],labels[labels!=0] )           # Fit the data to the visualizer
     visualizer.transform(final_feat[labels!=0])        # Transform the data
     
-    plt.savefig(r"imgs/{title}.png")
+    plt.savefig(f"imgs/{title}.png")
     plt.close()
 
 
@@ -239,11 +242,11 @@ def radvits_data(final_feat, labels, title='labeled'):
     })
     rad_viz = radviz(df, 'Category')
 
-    plt.savefig(r"imgs/radvits_data_{title}.png")
+    plt.savefig(f"imgs/radvits_data_{title}.png")
     plt.close()
 
 
-def remove_features(features, indexes):
+def remove_features(features, pairs):
     """
         FEATURES REMOVING
     """

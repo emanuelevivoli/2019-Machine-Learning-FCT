@@ -219,7 +219,7 @@ def clustering_valutation_visualization(file_prefix,ids,labels,featu,kmin,n_clus
     int_aggl[np.where(int_aggl == np.max(int_aggl, 0)[1])[0][0]][0]
     best_int_k=int(int_aggl[np.where(int_aggl == np.max(int_aggl, 0)[1])[0][0]][0])
     print("the best k, according to the internal index is: ",best_int_k)
-    first_file_name="tp2_data/"+file_prefix+"_"+str(best_int_k)+"cluster"+str(n_feat)+"feat_int.html"
+    first_file_name="htmls/"+file_prefix+"_"+str(best_int_k)+"cluster"+str(n_feat)+"feat_int.html"
     report_clusters(ids, k_labels[best_int_k-kmin], first_file_name)
     print("Visualization in the file: ",first_file_name)
     
@@ -227,7 +227,7 @@ def clustering_valutation_visualization(file_prefix,ids,labels,featu,kmin,n_clus
     best_ext_k=int(ext_aggl[np.where(ext_aggl == np.max(ext_aggl, 0)[1])[0][0]][0])
     print("the best k, according to the external index is: ",best_ext_k)
     if best_ext_k!= best_int_k:
-        second_file_name= "tp2_data/"+file_prefix+"_"+str(best_ext_k)+"cluster"+str(n_feat)+"feat_ext.html"
+        second_file_name= "htmls/"+file_prefix+"_"+str(best_ext_k)+"cluster"+str(n_feat)+"feat_ext.html"
         report_clusters(ids, k_labels[best_ext_k-kmin], second_file_name)
         print("Visualization in the file: ",second_file_name)
     
@@ -238,7 +238,7 @@ def clustering_valutation_visualization(file_prefix,ids,labels,featu,kmin,n_clus
 def bisect_kmeans_visualization(ids,featu,n_feat,n_cluster):
     featu=featu[:,:n_feat]
     res_real_bi=new_BiKMemans_predict(n_cluster,featu)
-    file_name="tp2_data/NewBiKmeans"+str(n_cluster)+"cluster"+str(n_feat)+"feat.html"
+    file_name="htmls/NewBiKmeans"+str(n_cluster)+"cluster"+str(n_feat)+"feat.html"
     print("Visualization in the file: ",file_name)
     report_clusters_hierarchical(ids,res_real_bi,file_name)
     

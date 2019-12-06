@@ -5,15 +5,23 @@
 # our libraries
 import utilities as uti
 
+import numpy as np 
+from sklearn.neighbors import KNeighborsClassifier
+from matplotlib import pyplot as plt
+from sklearn.cluster import DBSCAN
+from sklearn.metrics import adjusted_rand_score
+
+from mpl_toolkits.mplot3d import Axes3D
+
 START_FEAT = 2
 MARGIN = 15
+NEIGHBOURS = 5
 
-def find_eps_params(features, title='find_eps_params'):
+def find_eps_params(features, title="find_eps_params"):
 
     num_features = features.shape[1]
     
     neigh = KNeighborsClassifier(n_neighbors=NEIGHBOURS)
-
     nbrs = neigh.fit(features, np.ones(features.shape[0]))
     distances, indices = nbrs.kneighbors(features)
 
@@ -50,7 +58,7 @@ def find_eps_params(features, title='find_eps_params'):
     return (y[x_index[0]], y[x_index[-1]])
 
 
-def DBSCAN_clustering(features, title='find_eps_params'):
+def DBSCAN_clustering(final_feat, labels, title="find_eps_params"):
 
     # clustering with DBSCAN
     dbscan_by_num = []
@@ -60,7 +68,7 @@ def DBSCAN_clustering(features, title='find_eps_params'):
         dbscan_by_eps = []
         
         # automatically selecting epsilon
-        eps_range = find_eps_params(final_feat[:,:numb], title=title)
+        eps_range = find_eps_params(final_feat[:,:numb], title)
         
         eps_matrix.append(eps_range)
         
@@ -74,7 +82,7 @@ def DBSCAN_clustering(features, title='find_eps_params'):
     return np.array(dbscan_by_num), np.array(eps_matrix)
 
 
-def calculate_scores(labels, start_feat, final_feat, dbscan_by_num):
+def calculate_scores(labels, final_feat, dbscan_by_num):
 
     score_by_num = []
 
@@ -83,7 +91,7 @@ def calculate_scores(labels, start_feat, final_feat, dbscan_by_num):
     lab = np.array([int(l) for l in lab])
 
 
-    for numb in np.arange(final_feat[labels!=0].shape[1]-start_feat):
+    for numb in np.arange(final_feat[labels!=0].shape[1]-START_FEAT):
         score_by_eps = []
         for eps in np.arange(50):
 
@@ -143,20 +151,23 @@ def indexes_to_dict(win_ids):
     return win_dic
 
 
-def save_3d_plot(win_dic, eps_matrix, dbscan_by_num, title='cluster'):
+def save_3d_plot(win_dic, eps_matrix, dbscan_by_num, final_feat,  title='cluster'):
 
     for x, y in win_dic.keys():
+        print(x,y)
         
         num_features = x
 
+        (idi, idj) = list(win_dic.keys())[0]
         a = eps_matrix[idi]
         epsi = np.linspace(a[0], a[1], 50)[36]
 
         print(win_dic[(x,y)],'\n',dbscan_by_num[x,y])
-
+        
+        fig = plt.figure()
         ax = Axes3D(fig, elev=-150, azim=110)
 
-        ff = final_feat[labels!=0, :x+1]
+        ff = final_feat[:, :x+1]
         db = dbscan_by_num[x,y]
 
         #ff = ff[db!=-1,:]
@@ -175,3 +186,4 @@ def save_3d_plot(win_dic, eps_matrix, dbscan_by_num, title='cluster'):
         ax.w_zaxis.set_ticklabels([])
 
         plt.savefig(f"imgs/clusters/{title}_{num_features}_feats_{np.round(epsi,3)}_epsi.png")
+        plt.close()

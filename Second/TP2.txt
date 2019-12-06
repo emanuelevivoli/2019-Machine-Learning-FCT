@@ -13,6 +13,23 @@ QUESTIONS:
 Q1: Explain how you selected the best attributes for the clustering phase. In particular, indicate the visualization methods used to explore the extracted attributes and any statistical tests used.
 R1:
 
+After the standardization, we see at the correlation matrix:
+
+correlation_matrix.png
+
+We can see that the first sixt feature represented in the 6x6 square in the top left are very uncorrelated between them, in fact they are the PCA trasformation of the space, and the PCA axis are Linearly independent.
+Also the 6x6 square in the bottom rigth represent that the 6 features of the isomap are very uncorrelated. One thing that we notice is that the middle 6 variables are a bit correlated between them, they correspond to the feature from the tne.
+Now the important things that guided us to the following steps is that between the first 6 (PCA) features and the last 6 (Isomap) features we have a correlation thet in general il bigger than 0.6.
+So the PCA feature represent quite similar information about the data, than Isomap.
+Than we remove the feature highly correlated. We can see a scatter maps of this features in the following image:
+
+correlated_scatter_matrix.png
+
+The last thing that we did is the Anova test twith the H0 hypothesis of equality of the means cector for the different class (in our case, clusters).
+With this test we select the p_values of every features (resulting from the univariate test on each feature) and we calculate the critic value.
+We than reject the features that satisfies the test, and so that are no informative because the means of the cluster are (for the Anova test) equals with 95% of confident (assuming alpha = 5%).
+We end up with 10 features.
+
 
 Q2: After selecting the attributes, did you standardize or normalize the values? Justify your decision.
 R2:

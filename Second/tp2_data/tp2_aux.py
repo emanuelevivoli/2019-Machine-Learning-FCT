@@ -14,7 +14,7 @@ def images_as_matrix(N=563, folder=''):
     return np.array([imread(f'{folder}images/{ix}.png',as_gray=True).ravel() for ix in range(563)])
         
 
-def report_clusters(ids, labels, report_file):
+def report_clusters(ids, labels, report_file, folder=''):
     """Generates html with cluster report
     ids is a 1D array with the id numbers of the images in the images/ folder
     labels is a 1D array with the corresponding cluster labels
@@ -34,7 +34,7 @@ def report_clusters(ids, labels, report_file):
         html.append(f"<h1>Cluster {lbl}</h1>")        
         lbl_imgs = ids[labels==lbl]          
         for count,img in enumerate(lbl_imgs):                
-            html.append(f'<img src="images/{int(img)}.png" />')
+            html.append(f'<img src="{folder}images/{int(img)}.png" />')
             #if count % 10 == 9:
             #    html.append('<br/>')
     html.append("</body></html>")   
