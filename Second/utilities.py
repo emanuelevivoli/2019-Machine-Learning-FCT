@@ -1,6 +1,7 @@
 from sklearn.cluster import KMeans
 from sklearn.metrics import adjusted_rand_score
 from sklearn.metrics import silhouette_score
+from sklearn.cluster import AgglomerativeClustering
 import numpy as np 
 
 try:  # SciPy >= 0.19
@@ -76,6 +77,14 @@ def kmeans_all_results(featu, kmax, vlarray):
         ext_index_values.append([k,adjusted_rand_score(vlarray[1],v_labels)])
 
     return int_index_values,ext_index_values,klabels_for_k
+
+def kmeans_all_results_for_different_features(featu,indexes,n_cluster_max,n_feat_max,vlarray):
+    res=dict();
+    for n_feat in range(2,n_feat_max):
+        features_last_sel = features_sel[:,indexes[:n_feat]]
+        featu=features_last_sel
+        res[n_feat]= uti.kmeans_all_results(featu,n_cluster_max,vlarray)
+    return res
 
 '''
 def BiKMemans_predict(kmax,featu):
@@ -172,9 +181,9 @@ def select_two_empty_dictionary(d):
 
     first=-1
     for di in d:
-        print(di)
+        #print(di)
         if(not di):
-            print("void d: ",di)
+            #print("void d: ",di)
             if first==-1:
                 first=di.copy()
             else:
@@ -185,7 +194,7 @@ def get_larger_dictionary(d):
     larger_one = dict()
     larger_one[0]=0
     for di in d:
-        print(di)
+        #print(di)
         if len(larger_one) < len(di):
             larger_one=di.copy()
     return larger_one
@@ -259,3 +268,18 @@ def bi_kmeans_all_results(featu, kmax, vlarray):
         ext_index_values.append([k,adjusted_rand_score(vlarray[1],v_labels)])
 
     return int_index_values,ext_index_values,klabels_for_k, groups_for_bk
+
+
+def aggl_all_results(featu, kmax, vlarray):
+    int_index_values = []
+    ext_index_values = []
+    klabels_for_k = []
+    
+    for k in range(2, kmax+1):
+        klabels =  AgglomerativeClustering(n_clusters = k).fit_predict(featu)
+        klabels_for_k.append(klabels)
+        int_index_values.append([k,silhouette_score(featu, klabels, metric = 'euclidean')])
+        v_labels = take_selected_from_array(klabels,vlarray[0].tolist())
+        ext_index_values.append([k,adjusted_rand_score(vlarray[1],v_labels)])
+
+    return int_index_values,ext_index_values,klabels_for_k
