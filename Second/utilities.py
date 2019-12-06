@@ -1,7 +1,37 @@
 from sklearn.cluster import KMeans
 from sklearn.metrics import adjusted_rand_score
 from sklearn.metrics import silhouette_score
+from sklearn.metrics import accuracy_score
+
 import numpy as np 
+
+try:  # SciPy >= 0.19
+    from scipy.special import comb
+except ImportError:
+    from scipy.misc import comb  # noqa 
+
+def scores(clusters, classes):
+    tp_plus_fp = comb(np.bincount(clusters), 2).sum()
+    tp_plus_fn = comb(np.bincount(classes), 2).sum()
+    A = np.c_[(clusters, classes)]
+    tp = sum(comb(np.bincount(A[A[:, 0] == i, 1]), 2).sum()
+             for i in set(clusters))
+    fp = tp_plus_fp - tp
+    fn = tp_plus_fn - tp
+    tn = comb(len(A), 2) - tp - fp - fn
+    return (tp, fp, fn, tn)
+
+def rand_index_score(tp, fp, fn, tn):
+    return (tp + tn) / (tp + fp + fn + tn)
+
+def precision(tp, fp, fn, tn):
+    return tp/(fp + tp)
+
+def recall(tp, fp, fn, tn):
+    return tp/(fn + tp)
+
+def f1(precision, recall):
+    return 2 * (precision * recall)/(precision + recall)
 
 #date le labels iniziali
 #ritorna la lista degli indici!=0 e la lista delle relative classi
