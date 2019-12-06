@@ -2,6 +2,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import adjusted_rand_score
 from sklearn.metrics import silhouette_score
 from sklearn.cluster import AgglomerativeClustering
+from utils import *
 import numpy as np 
 
 try:  # SciPy >= 0.19
@@ -85,97 +86,6 @@ def kmeans_all_results_for_different_features(featu,indexes,n_cluster_max,n_feat
         featu=features_last_sel
         res[n_feat]= uti.kmeans_all_results(featu,n_cluster_max,vlarray)
     return res
-
-'''
-def BiKMemans_predict(kmax,featu):
-    featu_dict=dict()
-    prof_results=dict()
-
-    for i in range(0,563):
-            #print(i)
-            featu_dict[i]=featu[i]
-            prof_results[i]=list([])
-
-    results=dict()
-    kmax_ind=0
-
-    for k in range (2,kmax+1):
-        #featu.dict
-        valu_list=featu_dict
-        #print(valu_list.values())
-        valu_array= np.array(list(valu_list.values()))
-        index_array= np.array(list(valu_list.keys()))
-        #print(valu_array)
-        index_dict=dict()
-
-        print("ia",index_array)
-
-        klabels = KMeans(2).fit_predict(valu_array)
-        n_to_add_labels= ((kmax_ind)*2)
-        #print(klabels,"K")
-
-        klabels=klabels+n_to_add_labels
-        print("K2",klabels)
-        first_cluster=dict()
-        second_cluster=dict()
-        temp_results=dict()
-
-        for i in range(0,len(klabels)):
-
-            realIndex = index_array[i]
-            temp_results[realIndex]=klabels[i]
-            if klabels[i]==n_to_add_labels:
-                first_cluster[realIndex]=featu_dict[realIndex]
-            else:
-                second_cluster[realIndex]=featu_dict[realIndex]
-            prof_label=klabels[i]-n_to_add_labels    
-            prof_results[realIndex].append(prof_label)
-
-        if len(first_cluster)<len(second_cluster):
-            print("f")
-            for el,val in first_cluster.items():
-                print(el," label: ",temp_results[el])
-                results[el]=temp_results[el]
-
-            if k==kmax:
-                print("F FINE")
-                for el,val in second_cluster.items():
-                    #print(el,val)
-                    print(el)
-                    results[el]=temp_results[el]
-            else:
-                featu_dict = second_cluster.copy()
-        else: 
-            print("s")
-            for el,val in second_cluster.items():
-                print(el," label: ",temp_results[el])
-                results[el]=temp_results[el]
-
-
-            if k==kmax:
-                print("S FINE")
-                for el,val in first_cluster.items():
-                    #print(el,val)
-                    print(el)
-                    results[el]=temp_results[el]
-            else:
-                featu_dict = first_cluster.copy()
-
-
-        first_cluster.clear()
-        second_cluster.clear()
-        kmax_ind=kmax_ind+1
-
-    print(results)
-
-    list_result=[]
-    for k, v in results.items(): 
-        #print(k, v)
-        list_result.append(v)
-    print(list_result)
-    print(prof_results)
-    return list_result,list(prof_results.values())
-'''
 
 def select_two_empty_dictionary(d):
 
@@ -283,3 +193,36 @@ def aggl_all_results(featu, kmax, vlarray):
         ext_index_values.append([k,adjusted_rand_score(vlarray[1],v_labels)])
 
     return int_index_values,ext_index_values,klabels_for_k
+
+def clustering_valutation_visualization(file_prefix,ids,labels,featu,n_cluster_max,f1):
+    
+    vlarray=take_valid_labels(labels)
+    
+    n_feat=featu.shape[1]
+    int_aggl, ext_aggl, k_labels = f1(featu,n_cluster_max,vlarray)
+    int_aggl = np.array(int_aggl)
+    int_aggl[np.where(int_aggl == np.max(int_aggl, 0)[1])[0][0]][0]
+    best_int_k=int(int_aggl[np.where(int_aggl == np.max(int_aggl, 0)[1])[0][0]][0])
+    print("the best k, according to the internal index is: ",best_int_k)
+    first_file_name="tp2_data/"+file_prefix+"_"+str(best_int_k)+"cluster"+str(n_feat)+"feat_int.html"
+    report_clusters(ids, k_labels[best_int_k-2], first_file_name)
+    print("Visualization in the file: ",first_file_name)
+    
+    ext_aggl = np.array(ext_aggl)
+    best_ext_k=int(ext_aggl[np.where(ext_aggl == np.max(ext_aggl, 0)[1])[0][0]][0])
+    print("the best k, according to the external index is: ",best_ext_k)
+    if best_ext_k!= best_int_k:
+        second_file_name= "tp2_data/"+file_prefix+"_"+str(best_ext_k)+"cluster"+str(n_feat)+"feat_ext.html"
+        report_clusters(ids, k_labels[best_ext_k-2], second_file_name)
+        print("Visualization in the file: ",second_file_name)
+              
+    print()
+    
+
+def bisect_kmeans_visualization(ids,featu,n_feat,n_cluster):
+    featu=featu[:,:n_feat]
+    res_real_bi=new_BiKMemans_predict(n_cluster,featu)
+    file_name="tp2_data/NewBiKmeans"+str(n_cluster)+"cluster"+str(n_feat)+"feat.html"
+    print("Visualization in the file: ",file_name)
+    report_clusters_hierarchical(ids,res_real_bi,file_name)
+    
