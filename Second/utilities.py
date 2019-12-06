@@ -2,6 +2,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import adjusted_rand_score
 from sklearn.metrics import silhouette_score
 from sklearn.cluster import AgglomerativeClustering
+from sklearn import mixture
 from utils import *
 import numpy as np 
 
@@ -62,15 +63,29 @@ def take_selected_from_array(array,valid_values):
     for i in valid_values:
         res.append(array[i])
     return res
-    
-#date le feature, il k massimo, l'indici !=0 delle label iniziali
-#ritorna i valori silhouette e ars per ogni k
-def kmeans_all_results(featu, kmax, vlarray):
+
+def mixture_all_results(featu,kmin, kmax, vlarray):
     int_index_values = []
     ext_index_values = []
     klabels_for_k = []
     
-    for k in range(2, kmax+1):
+    for k in range(kmin, kmax+1):
+        klabels = mixture.GaussianMixture(n_components = k, covariance_type='full').fit_predict(featu)
+        klabels_for_k.append(klabels)
+        int_index_values.append([k,silhouette_score(featu, klabels, metric = 'euclidean')])
+        v_labels = take_selected_from_array(klabels,vlarray[0].tolist())
+        ext_index_values.append([k,adjusted_rand_score(vlarray[1],v_labels)])
+
+    return int_index_values,ext_index_values,klabels_for_k
+    
+#date le feature, il k massimo, l'indici !=0 delle label iniziali
+#ritorna i valori silhouette e ars per ogni k
+def kmeans_all_results(featu,kmin, kmax, vlarray):
+    int_index_values = []
+    ext_index_values = []
+    klabels_for_k = []
+    
+    for k in range(kmin, kmax+1):
         klabels = KMeans(n_clusters = k).fit_predict(featu)
         klabels_for_k.append(klabels)
         int_index_values.append([k,silhouette_score(featu, klabels, metric = 'euclidean')])
@@ -180,12 +195,12 @@ def bi_kmeans_all_results(featu, kmax, vlarray):
     return int_index_values,ext_index_values,klabels_for_k, groups_for_bk
 
 
-def aggl_all_results(featu, kmax, vlarray):
+def aggl_all_results(featu,kmin, kmax, vlarray):
     int_index_values = []
     ext_index_values = []
     klabels_for_k = []
     
-    for k in range(2, kmax+1):
+    for k in range(kmin, kmax+1):
         klabels =  AgglomerativeClustering(n_clusters = k).fit_predict(featu)
         klabels_for_k.append(klabels)
         int_index_values.append([k,silhouette_score(featu, klabels, metric = 'euclidean')])
@@ -194,18 +209,18 @@ def aggl_all_results(featu, kmax, vlarray):
 
     return int_index_values,ext_index_values,klabels_for_k
 
-def clustering_valutation_visualization(file_prefix,ids,labels,featu,n_cluster_max,f1):
+def clustering_valutation_visualization(file_prefix,ids,labels,featu,kmin,n_cluster_max,f1):
     
     vlarray=take_valid_labels(labels)
     
     n_feat=featu.shape[1]
-    int_aggl, ext_aggl, k_labels = f1(featu,n_cluster_max,vlarray)
+    int_aggl, ext_aggl, k_labels = f1(featu,kmin,n_cluster_max,vlarray)
     int_aggl = np.array(int_aggl)
     int_aggl[np.where(int_aggl == np.max(int_aggl, 0)[1])[0][0]][0]
     best_int_k=int(int_aggl[np.where(int_aggl == np.max(int_aggl, 0)[1])[0][0]][0])
     print("the best k, according to the internal index is: ",best_int_k)
     first_file_name="tp2_data/"+file_prefix+"_"+str(best_int_k)+"cluster"+str(n_feat)+"feat_int.html"
-    report_clusters(ids, k_labels[best_int_k-2], first_file_name)
+    report_clusters(ids, k_labels[best_int_k-kmin], first_file_name)
     print("Visualization in the file: ",first_file_name)
     
     ext_aggl = np.array(ext_aggl)
@@ -213,10 +228,11 @@ def clustering_valutation_visualization(file_prefix,ids,labels,featu,n_cluster_m
     print("the best k, according to the external index is: ",best_ext_k)
     if best_ext_k!= best_int_k:
         second_file_name= "tp2_data/"+file_prefix+"_"+str(best_ext_k)+"cluster"+str(n_feat)+"feat_ext.html"
-        report_clusters(ids, k_labels[best_ext_k-2], second_file_name)
+        report_clusters(ids, k_labels[best_ext_k-kmin], second_file_name)
         print("Visualization in the file: ",second_file_name)
-              
-    print()
+    
+    return int_aggl, ext_aggl, k_labels
+    
     
 
 def bisect_kmeans_visualization(ids,featu,n_feat,n_cluster):
