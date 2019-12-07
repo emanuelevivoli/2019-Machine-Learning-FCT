@@ -43,7 +43,7 @@ def report_clusters(ids, labels, report_file, folder=''):
 
 DIV_STYLE = """style = "display: block;border-style: solid; border-width: 5px;border-color:blue;padding:5px;margin:5px;" """
 
-def cluster_div(prev,ids,lbl_lists):
+def cluster_div(prev,ids,lbl_lists, folder=''):
     div = []    
     lbls = [lbl[0] for lbl in lbl_lists]
     lbls = list(np.unique(lbls))
@@ -54,7 +54,7 @@ def cluster_div(prev,ids,lbl_lists):
         current_indexes = [ix for ix in indexes if len(lbl_lists[ix]) == 1]
         next_indexes = [ix for ix in indexes if len(lbl_lists[ix]) > 1]
         for ix in current_indexes:
-                div.append(f'<img src="images/{int(ids[ix])}.png" />')
+                div.append(f'<img src="{folder}images/{int(ids[ix])}.png" />')
         if len(next_indexes)>0:            
             #print(f'**{prev}**\n',indexes,'\n  ',current_indexes,'\n   ',next_indexes, len(next_indexes))        
             next_ids = [ids[ix] for ix in next_indexes]
@@ -65,7 +65,7 @@ def cluster_div(prev,ids,lbl_lists):
     return '\n'.join(div)
     
 
-def report_clusters_hierarchical(ixs,label_lists,report_file):
+def report_clusters_hierarchical(ixs,label_lists,report_file, folder=''):
     html = ["""<!DOCTYPE html>
     <html lang="en">
        <head>
@@ -75,7 +75,7 @@ def report_clusters_hierarchical(ixs,label_lists,report_file):
        </head>
        <body>
        """]   
-    html.append(cluster_div('',ixs,label_lists))   
+    html.append(cluster_div('',ixs,label_lists, folder))   
     html.append("</body></html>")   
     with open(report_file,'w') as ofil:
         ofil.write('\n'.join(html))

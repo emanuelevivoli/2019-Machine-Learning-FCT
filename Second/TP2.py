@@ -127,19 +127,19 @@ def main():
     ##  CLUSTERING KMEANS
     ##
 
-    resu=uti.clustering_valutation_visualization(prefix+"K-means_",ids,labels,featu,n_cluster_min,n_cluster_max,uti.kmeans_all_results)
+    resu=uti.clustering_valutation_visualization("K-means_",ids,labels,featu,n_cluster_min,n_cluster_max,uti.kmeans_all_results)
     
     ##
     ##  CLUSTERING AGGLOMERATIVE
     ##
 
-    resu=uti.clustering_valutation_visualization(prefix+"Agglomerative_",ids,labels,featu,n_cluster_min,n_cluster_max,uti.aggl_all_results)
+    resu=uti.clustering_valutation_visualization("Agglomerative_",ids,labels,featu,n_cluster_min,n_cluster_max,uti.aggl_all_results)
     
     ##
     ##  CLUSTERING MIXTURE
     ##
     
-    resu=uti.clustering_valutation_visualization(prefix+"Mixture_",ids,labels,featu,n_cluster_min,n_cluster_max,uti.mixture_all_results)
+    resu=uti.clustering_valutation_visualization("Mixture_",ids,labels,featu,n_cluster_min,n_cluster_max,uti.mixture_all_results)
 
     ##
     ##  CLUSTERING BISECTING
