@@ -3,6 +3,7 @@ from sklearn.metrics import adjusted_rand_score
 from sklearn.metrics import silhouette_score
 from sklearn.cluster import AgglomerativeClustering
 from sklearn import mixture
+from matplotlib import pyplot as plt
 from utils import *
 import numpy as np 
 
@@ -33,6 +34,14 @@ def recall(tp, fp, fn, tn):
 
 def f1(precision, recall):
     return 2 * (precision * recall)/(precision + recall)
+
+# plot_optimization(internal, "internal_score_kmeans")
+def plot_optimization(val_int, title):
+    fig = plt.figure(1, figsize=(8, 8))
+    plt.plot(np.array(val_int)[:,0], np.array(val_int)[:,1])
+    plt.scatter(val_int[np.where(val_int == np.max(val_int, 0)[1])[0][0]][0],val_int[np.where(val_int == np.max(val_int, 0)[1])[0][0]][1])
+    plt.savefig(title)
+    plt.close()
 
 #date le labels iniziali
 #ritorna la lista degli indici!=0 e la lista delle relative classi

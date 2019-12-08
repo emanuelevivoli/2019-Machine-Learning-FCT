@@ -110,7 +110,7 @@ def main():
 
     win_dic = indexes_to_dict(win_ids)
 
-    # save_3d_plot(win_dic, eps_matrix, dbscan_by_num, features_sel[labels!=0,:], title='cluster')
+    save_3d_plot(win_dic, eps_matrix, dbscan_by_num, score_by_num, features_sel[labels!=0,:], title='cluster')
 
     ##
     ##  OTHER CLUSTERING 
@@ -127,19 +127,25 @@ def main():
     ##  CLUSTERING KMEANS
     ##
 
-    resu=uti.clustering_valutation_visualization("K-means_",ids,labels,featu,n_cluster_min,n_cluster_max,uti.kmeans_all_results)
-    
+    int_aggl, ext_aggl, _ = uti.clustering_valutation_visualization("K-means_",ids,labels,featu,n_cluster_min,n_cluster_max,uti.kmeans_all_results)
+    uti.plot_optimization(int_aggl, "internal_score_kmeans")
+    uti.plot_optimization(ext_aggl, "external_score_kmeans")
+
     ##
     ##  CLUSTERING AGGLOMERATIVE
     ##
 
-    resu=uti.clustering_valutation_visualization("Agglomerative_",ids,labels,featu,n_cluster_min,n_cluster_max,uti.aggl_all_results)
-    
+    int_aggl, ext_aggl, _ = uti.clustering_valutation_visualization("Agglomerative_",ids,labels,featu,n_cluster_min,n_cluster_max,uti.aggl_all_results)
+    uti.plot_optimization(int_aggl, "internal_score_agglomerative")
+    uti.plot_optimization(ext_aggl, "external_score_agglomerative")
+
     ##
     ##  CLUSTERING MIXTURE
     ##
     
-    resu=uti.clustering_valutation_visualization("Mixture_",ids,labels,featu,n_cluster_min,n_cluster_max,uti.mixture_all_results)
+    int_aggl, ext_aggl, _ = uti.clustering_valutation_visualization("Mixture_",ids,labels,featu,n_cluster_min,n_cluster_max,uti.mixture_all_results)
+    uti.plot_optimization(int_aggl, "internal_score_gaussianmixture")
+    uti.plot_optimization(ext_aggl, "external_score_gaussianmixture")
 
     ##
     ##  CLUSTERING BISECTING

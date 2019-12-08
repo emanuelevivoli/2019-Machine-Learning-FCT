@@ -43,7 +43,7 @@ def find_eps_params(features, title="find_eps_params"):
     #print(ynew.shape)
     x_index = np.where(np.r_[True, ynew[1:] < ynew[:-1]] & np.r_[ynew[:-1] < ynew[1:], True] == True)[0][-3:]
     x_index[-1]=x_index[-1] + MARGIN
-    print(x_index)
+    # print(x_index)
 
     plt.axhline(y=y[x_index[0]], linestyle='--', c='blue')
     plt.axhline(y=y[x_index[-1]], linestyle='--', c='red')
@@ -54,7 +54,7 @@ def find_eps_params(features, title="find_eps_params"):
     plt.plot( xnew, y, '-', c='black')
 
     plt.savefig(f"imgs/find_eps_params/{title}_{num_features}_feats.png")
-
+    plt.close()
     return (y[x_index[0]], y[x_index[-1]])
 
 
@@ -112,7 +112,7 @@ def calculate_scores(labels, final_feat, dbscan_by_num):
             #score_by_eps.append([randm, preci, recal, effe1])
             
             adjrn = adjusted_rand_score(app_clu, app_lab)
-            score_by_eps.append([adjrn])
+            score_by_eps.append([eps, adjrn])
 
             #adjrn = adjusted_rand_score(app_clu, app_lab)
             #silue = silhouette_score(app_clu, app_lab, metric = 'euclidean')
@@ -130,7 +130,7 @@ def calculate_bests_indexes(score_by_num):
     skip = []
     for k in win:
         were = np.where(score_by_num == k)
-        if not (np.ravel(were).size/3 >  score_by_num.shape[1]/3):
+        if not (np.ravel(were).size/3 >  score_by_num.shape[1]/3) and not k == 49:
             win_ids.append(were)
         else:
             win_ids.append(False)
@@ -151,39 +151,42 @@ def indexes_to_dict(win_ids):
     return win_dic
 
 
-def save_3d_plot(win_dic, eps_matrix, dbscan_by_num, final_feat,  title='cluster'):
+def save_3d_plot(win_dic, eps_matrix, dbscan_by_num, score_by_num, final_feat,  title='cluster'):
 
     for x, y in win_dic.keys():
-        print(x,y)
-        
+
         num_features = x
 
         (idi, idj) = list(win_dic.keys())[0]
         a = eps_matrix[idi]
-        epsi = np.linspace(a[0], a[1], 50)[36]
+        epsi = np.linspace(a[0], a[1], 50)
 
-        print(win_dic[(x,y)],'\n',dbscan_by_num[x,y])
+        ext_dbscan = score_by_num[idi]
+        ext_dbscan[:,0] = epsi
+        uti.plot_optimization(ext_dbscan, f"external_score_dbscan_{x}features_{np.round(y,3)}epsi")
+
+        # print(win_dic[(x,y)],'\n',dbscan_by_num[x,y])
         
-        fig = plt.figure()
-        ax = Axes3D(fig, elev=-150, azim=110)
+        # fig = plt.figure()
+        # ax = Axes3D(fig, elev=-150, azim=110)
 
-        ff = final_feat[:, :x+1]
-        db = dbscan_by_num[x,y]
+        # ff = final_feat[:, :x+1]
+        # db = dbscan_by_num[x,y]
 
-        #ff = ff[db!=-1,:]
-        #db = db[db!=-1]
+        # #ff = ff[db!=-1,:]
+        # #db = db[db!=-1]
 
-        print(np.unique(db))
+        # print(np.unique(db))
 
-        ax.scatter(ff[:, 0], ff[:, 1], ff[:, 2], c=db,
-                cmap=plt.cm.Set1, edgecolor='k', s=40)
-        ax.set_title(f"Clustering with DBSCAN [{num_features},{epsi}]")
-        ax.set_xlabel("1st feature")
-        ax.w_xaxis.set_ticklabels([])
-        ax.set_ylabel("2nd feature")
-        ax.w_yaxis.set_ticklabels([])
-        ax.set_zlabel("3rd feature")
-        ax.w_zaxis.set_ticklabels([])
+        # ax.scatter(ff[:, 0], ff[:, 1], ff[:, 2], c=db,
+        #         cmap=plt.cm.Set1, edgecolor='k', s=40)
+        # ax.set_title(f"Clustering with DBSCAN [{num_features},{epsi}]")
+        # ax.set_xlabel("1st feature")
+        # ax.w_xaxis.set_ticklabels([])
+        # ax.set_ylabel("2nd feature")
+        # ax.w_yaxis.set_ticklabels([])
+        # ax.set_zlabel("3rd feature")
+        # ax.w_zaxis.set_ticklabels([])
 
-        plt.savefig(f"imgs/clusters/{title}_{num_features}_feats_{np.round(epsi,3)}_epsi.png")
-        plt.close()
+        # plt.savefig(f"imgs/clusters/{title}_{num_features}_feats_{np.round(epsi,3)}_epsi.png")
+        # plt.close()

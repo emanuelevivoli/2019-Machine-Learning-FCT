@@ -11,6 +11,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import f_classif
 from pandas import DataFrame
 
+i = 0
+
 def features_creation(dataset, NUMBER_FEATURES = 6):
     """
         FEATURES CREATION
@@ -52,37 +54,41 @@ def importance_test_SVM(features, labels, title='importance_test_SVM'):
     from sklearn.preprocessing import MinMaxScaler, Normalizer
     from sklearn.svm import LinearSVC
     from sklearn.model_selection import train_test_split
+    
+    global i
+    fig = plt.figure(i)
+    i = i+1
 
-    feat = features[labels!=0,:]
+    feat = features[labels!=0]
     lbs = labels[labels!=0]
 
     k_selection = 'all'
 
-    # Split dataset to select feature and evaluate the classifier
     X_train, X_test, y_train, y_test = train_test_split(
-        feat, lbs, stratify=lbs, random_state=4
+            feat, lbs, stratify=lbs, random_state=5
     )
-
+    
     selector = SelectKBest(f_classif, k=k_selection)
     selector.fit(X_train, y_train)
     scores = -np.log10(selector.pvalues_)
     scores /= scores.sum()
     X_indices = np.arange(feat.shape[-1])
     plt.bar(X_indices, scores, width=.2,
-        label=r'Univariate score ($-Log(p_{value})$)', color='darkorange')#,edgecolor='black')
+            label=r'Univariate score ($-Log(p_{value})$)', color='darkorange')#,edgecolor='black')
 
     # #############################################################################
     # Compare to the weights of an SVM
+
     clf = make_pipeline(MinMaxScaler(), LinearSVC())
     clf.fit(X_train, y_train)
-    print('Classification accuracy without selecting features: {:.3f}'
+    print('Classification accuracy row data: {:.3f}'
         .format(clf.score(X_test, y_test)))
 
     svm_weights = np.abs(clf[-1].coef_).sum(axis=0)
     svm_weights /= svm_weights.sum()
 
     plt.bar(X_indices + .2, svm_weights, width=.2, label='SVM weight',
-        color='navy')#,edgecolor='black')
+            color='navy')#,edgecolor='black')
 
     # #############################################################################
     # SVM on Normalized input
@@ -93,14 +99,14 @@ def importance_test_SVM(features, labels, title='importance_test_SVM'):
         LinearSVC()
     )
     clf_selected.fit(X_train, y_train)
-    print('Classification accuracy after selection (Normalized): {:.3f}'
+    print('Classification accuracy after Normalization: {:.3f}'
         .format(clf_selected.score(X_test, y_test)))
 
     svm_weights_selected = np.abs(clf_selected[-1].coef_).sum(axis=0)
     svm_weights_selected /= svm_weights_selected.sum()
 
     plt.bar(X_indices[selector.get_support()] + .4, svm_weights_selected,
-            width=.2, label='SVM selection (Normalized)', color='c')#,edgecolor='black')
+            width=.2, label='SVM Normalization', color='c')#,edgecolor='black')
 
 
     # #############################################################################
@@ -112,14 +118,14 @@ def importance_test_SVM(features, labels, title='importance_test_SVM'):
         LinearSVC()
     )
     clf_selected.fit(X_train, y_train)
-    print('Classification accuracy after selection (Standardize): {:.3f}'
+    print('Classification accuracy after Standardization: {:.3f}'
         .format(clf_selected.score(X_test, y_test)))
 
     svm_weights_selected = np.abs(clf_selected[-1].coef_).sum(axis=0)
     svm_weights_selected /= svm_weights_selected.sum()
 
     plt.bar(X_indices[selector.get_support()] + .6, svm_weights_selected,
-            width=.2, label='SVM selection (Standardize)', color='pink')#,edgecolor='black')
+            width=.2, label='SVM Standardization', color='pink')#,edgecolor='black')
 
 
     # #############################################################################
@@ -131,22 +137,23 @@ def importance_test_SVM(features, labels, title='importance_test_SVM'):
         LinearSVC()
     )
     clf_selected.fit(X_train, y_train)
-    print('Classification accuracy after selection (MinMax norm): {:.3f}'
+    print('Classification accuracy after MinMax norm: {:.3f}'
         .format(clf_selected.score(X_test, y_test)))
 
     svm_weights_selected = np.abs(clf_selected[-1].coef_).sum(axis=0)
     svm_weights_selected /= svm_weights_selected.sum()
 
     plt.bar(X_indices[selector.get_support()] + .8, svm_weights_selected,
-            width=.2, label='SVM selection (MinMax norm)', color='red')#,edgecolor='black')
+            width=.2, label='SVM MinMax norm', color='red')#,edgecolor='black')
 
     plt.title("Comparing feature selection")
     plt.xlabel('Feature number')
-    plt.yticks(())
+    plt.ylabel('Percentuage of emphasys')
     plt.axis('tight')
-    plt.legend(loc='upper right')
+    plt.legend(loc='upper center')
 
-    plt.savefig(f"imgs/importance_test_SVM.png")
+    plt.savefig(f"importance_test_SVM.png")
+    plt.close()
     
 
 
@@ -165,9 +172,20 @@ def features_correlation_matrix(features, title='correlation_matrix'):
         CREATES CORRELATION MATRIX
         
     """
+    # global i
+    # fig = plt.figure(i)
+    # i = i+1
+    import seaborn as sns
+    
     corr = abs(DataFrame(features).corr())
-    corr.style.background_gradient(cmap='coolwarm').format("{:.3}")
+    # corr.style.background_gradient(cmap='coolwarm').format("{:.3}")
+    
+    fig, ax = plt.subplots(figsize=(40, 40))
+    sns.heatmap(corr, annot=True, fmt='.3f', 
+                cmap=plt.get_cmap('coolwarm'), cbar=False, ax=ax)
+    ax.set_yticklabels(ax.get_yticklabels(), rotation="horizontal")
     plt.savefig(f"imgs/{title}.png")
+    plt.close()
     return corr
 
 def correlated_features(corr, CORRELATION_LIMIT=0.6):
@@ -185,7 +203,9 @@ def correlated_scatter_matrix(features_std, indexes, title='correlated_scatter_m
         SAVES SCATTER MATRIX IMAGE
         
     """
-
+    global i
+    fig = plt.figure(i)
+    i = i+1
     Axes = scatter_matrix(DataFrame(features_std[:,indexes], columns=indexes), alpha=0.5, diagonal='kde')
     #y ticklabels
     [plt.setp(item.yaxis.get_majorticklabels(), 'size', 5) for item in Axes.ravel()]
@@ -197,12 +217,16 @@ def correlated_scatter_matrix(features_std, indexes, title='correlated_scatter_m
     [plt.setp(item.xaxis.get_label(), 'size', 13) for item in Axes.ravel()]
 
     plt.savefig(f"imgs/{title}.png")
+    plt.close()
 
 
 def shapiro_ranking(final_feat, labels, title='shapiro_ranking'):
     from yellowbrick.datasets import load_credit
     from yellowbrick.features import Rank1D
-
+    
+    global i
+    fig = plt.figure(i)
+    i = i+1
     # Instantiate the 1D visualizer with the Sharpiro ranking algorithm
     visualizer = Rank1D(algorithm='shapiro')
 
@@ -211,6 +235,7 @@ def shapiro_ranking(final_feat, labels, title='shapiro_ranking'):
     # visualizer.show()              # Finalize and render the figure
 
     plt.savefig(f"imgs/{title}.png")
+    plt.close()
 
 
 def pearson_ranking(final_feat, labels, title='pearson_ranking'):
@@ -220,6 +245,7 @@ def pearson_ranking(final_feat, labels, title='pearson_ranking'):
     # Instantiate the visualizer with the Pearson ranking algorithm
     visualizer = Rank2D(algorithm='pearson')
 
+    global i
     fig = plt.figure(i, figsize=(8, 6))
     i = i+1
 
@@ -233,6 +259,10 @@ def pearson_ranking(final_feat, labels, title='pearson_ranking'):
 # radvits_data(final_feat[labels!=0,:], labels[labels!=0], title='labeled')
 # radvits_data(final_feat, labels, title='all')
 def radvits_data(final_feat, labels, title='labeled'):
+    
+    global i
+    fig = plt.figure(i)
+    i = i+1
     df = DataFrame({
             '1 feature': final_feat[:,0],
             '2 feature': final_feat[:,1],
